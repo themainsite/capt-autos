@@ -1,0 +1,484 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CAPT AUTOS | Management Centre</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--gold:#d6ad52;--bg:#090909;--panel:#151515;--line:#30291d;--muted:#aaa}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:#eee;font-family:Arial,sans-serif}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer;border:0;border-radius:7px;padding:11px 15px;font-weight:bold}
+.primary{background:var(--gold);color:#111}
+.secondary{background:#333;color:white}
+.danger{background:#682d2d;color:white}
+.success{background:#245b3b;color:white}
+.hidden{display:none!important}
+header{height:75px;padding:10px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;background:#111;position:sticky;top:0;z-index:5}
+header img{width:125px;max-height:55px;object-fit:contain}
+header strong{color:var(--gold)}
+.layout{display:flex;min-height:calc(100vh - 75px)}
+aside{width:225px;background:#111;border-right:1px solid var(--line);padding:20px 12px;flex-shrink:0}
+.nav{display:block;width:100%;text-align:left;margin:5px 0;background:transparent;color:#ccc;padding:14px;border-radius:7px}
+.nav.active,.nav:hover{background:#302719;color:var(--gold)}
+main{padding:25px;width:100%;max-width:1250px;margin:auto}
+h1,h2,h3{color:var(--gold)}
+h1{margin-top:0}
+.muted{color:var(--muted);line-height:1.6}
+.panel,.item{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:19px;margin-bottom:18px}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.stat{background:var(--panel);border:1px solid var(--line);padding:18px;border-radius:10px}
+.stat small{color:var(--muted)}
+.stat strong{display:block;font-size:27px;color:var(--gold);margin-top:10px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+label{display:block;color:var(--gold);margin:13px 0 6px}
+input,select,textarea{width:100%;padding:12px;background:#090909;color:white;border:1px solid #494235;border-radius:6px}
+textarea{min-height:95px;resize:vertical}
+.form-actions{margin-top:17px;display:flex;gap:8px;flex-wrap:wrap}
+.item{overflow-wrap:anywhere}
+.item h3{margin-top:0}
+.item p{line-height:1.6}
+.item img{width:110px;height:85px;object-fit:cover;border-radius:7px;margin:5px}
+.photos{display:flex;flex-wrap:wrap}
+.tag{display:inline-block;background:#352c1a;color:#e9c875;padding:5px 9px;border-radius:5px;font-size:12px;margin:2px}
+.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:14px}
+#message{padding:10px 0;line-height:1.5}
+.search{margin-bottom:15px}
+.section{display:none}
+.section.active{display:block}
+#loginPanel{max-width:450px;margin:70px auto}
+@media(max-width:750px){
+ .layout{display:block}
+ aside{width:100%;display:flex;overflow-x:auto;padding:8px;position:sticky;top:75px;z-index:4}
+ .nav{white-space:nowrap;width:auto;flex-shrink:0;margin:0 3px;padding:12px}
+ main{padding:14px}
+ .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<header>
+<img src="capt-autos-logo.PNG" alt="CAPT AUTOS Logo">
+<strong>MANAGEMENT CENTRE</strong>
+<button id="logout" class="secondary hidden">Sign Out</button>
+</header>
+
+<section id="loginPanel" class="panel">
+<h1>Admin Login</h1>
+<p class="muted">Sign in to manage CAPT AUTOS.</p>
+<form id="loginForm">
+<label>Email address</label>
+<input id="email" type="email" required>
+<label>Password</label>
+<input id="password" type="password" required>
+<button class="primary" type="submit">LOG IN</button>
+</form>
+</section>
+
+<div id="app" class="layout hidden">
+<aside>
+<button class="nav active" data-section="overview">Overview</button>
+<button class="nav" data-section="vehicles">Vehicles</button>
+<button class="nav" data-section="requests">Customer Requests</button>
+<button class="nav" data-section="posts">Website Posts</button>
+</aside>
+
+<main>
+<div id="message" role="status" aria-live="polite"></div>
+
+<section id="overview" class="section active">
+<h1>Dashboard Overview</h1>
+<p class="muted">Welcome to CAPT AUTOS. Manage your dealership from here.</p>
+<div class="stats">
+<div class="stat"><small>Total Vehicles</small><strong id="totalCars">0</strong></div>
+<div class="stat"><small>Available</small><strong id="availableCars">0</strong></div>
+<div class="stat"><small>Sold</small><strong id="soldCars">0</strong></div>
+<div class="stat"><small>Pending Requests</small><strong id="pendingRequests">0</strong></div>
+</div>
+<div class="panel" style="margin-top:20px">
+<h2>Quick Actions</h2>
+<button class="primary" onclick="go('vehicles');newCar()">+ Add Vehicle</button>
+<button class="secondary" onclick="go('posts');newPost()">+ Create Website Post</button>
+<button class="secondary" onclick="go('requests')">Review Customer Requests</button>
+</div>
+</section>
+
+<section id="vehicles" class="section">
+<h1>Vehicle Management</h1>
+<div class="panel" id="carFormPanel">
+<h2 id="carFormTitle">Add New Vehicle</h2>
+<form id="carForm">
+<input type="hidden" id="carId">
+<div class="grid">
+<div><label>Vehicle title *</label><input id="carTitle" required placeholder="e.g. Clean Toyota Camry"></div>
+<div><label>Brand *</label><input id="carBrand" required placeholder="Toyota"></div>
+<div><label>Model *</label><input id="carModel" required placeholder="Camry"></div>
+<div><label>Year</label><input id="carYear" type="number" min="1950" max="2100"></div>
+<div><label>Price (₦)</label><input id="carPrice" type="number" min="0"></div>
+<div><label>Mileage</label><input id="carMileage" type="number" min="0"></div>
+<div><label>Transmission</label><select id="carTransmission"><option value="">Select</option><option>Automatic</option><option>Manual</option><option>CVT</option></select></div>
+<div><label>Fuel type</label><select id="carFuel"><option value="">Select</option><option>Petrol</option><option>Diesel</option><option>Hybrid</option><option>Electric</option></select></div>
+<div><label>Condition</label><select id="carCondition"><option value="">Select</option><option>Brand new</option><option>Foreign used</option><option>Nigerian used</option></select></div>
+<div><label>Location</label><input id="carLocation" value="Abuja, Nigeria"></div>
+<div><label>Listing status</label><select id="carStatus"><option value="available">Available</option><option value="pending">Pending</option><option value="sold">Sold</option></select></div>
+<div><label>Vehicle photos</label><input id="carPhotos" type="file" accept="image/jpeg,image/png,image/webp" multiple><small class="muted">Up to 5 photos, maximum 5 MB each. New uploads replace the existing photos when editing.</small></div>
+</div>
+<label>Description</label>
+<textarea id="carDescription" placeholder="Describe the vehicle..."></textarea>
+<div class="grid">
+<label><input id="carDistress" type="checkbox" style="width:auto"> Mark as distress sale</label>
+<label><input id="carFeatured" type="checkbox" style="width:auto"> Feature on homepage</label>
+</div>
+<div class="form-actions">
+<button class="primary" type="submit">SAVE VEHICLE</button>
+<button class="secondary" type="button" onclick="resetCarForm()">CLEAR FORM</button>
+</div>
+</form>
+</div>
+<h2>All Vehicles</h2>
+<input class="search" id="carSearch" placeholder="Search vehicles...">
+<div id="carList"></div>
+</section>
+
+<section id="requests" class="section">
+<h1>Customer Requests</h1>
+<p class="muted">Review Sell, Swap and Valuation submissions. Approving publishes the vehicle.</p>
+<button class="secondary" onclick="loadRequests()">Refresh Requests</button>
+<div id="requestList" style="margin-top:15px"></div>
+</section>
+
+<section id="posts" class="section">
+<h1>Website Posts</h1>
+<div class="panel">
+<h2 id="postFormTitle">Create a Website Post</h2>
+<form id="postForm">
+<input type="hidden" id="postId">
+<label>Post title *</label>
+<input id="postTitle" required maxlength="150" placeholder="e.g. Special Weekend Offers">
+<label>Post type</label>
+<select id="postType"><option value="announcement">Announcement</option><option value="promotion">Promotion / Special Offer</option><option value="update">Dealership Update</option></select>
+<label>Post content *</label>
+<textarea id="postContent" required maxlength="5000" placeholder="Write your announcement or promotion..."></textarea>
+<label>Image URL (optional)</label>
+<input id="postImage" type="url" placeholder="https://...">
+<label>Publication status</label>
+<select id="postStatus"><option value="draft">Save as Draft</option><option value="published">Publish Now</option></select>
+<div class="form-actions">
+<button class="primary" type="submit">SAVE POST</button>
+<button class="secondary" type="button" onclick="resetPostForm()">CLEAR</button>
+</div>
+</form>
+</div>
+<h2>All Posts</h2>
+<div id="postList"></div>
+</section>
+</main>
+</div>
+
+<script>
+const SUPABASE_URL="https://lcfsirumqiqphdwtmktp.supabase.co";
+const SUPABASE_KEY="sb_publishable_5kwR-5Ajh3KJmDWchcykGg_NeIz6S1g";
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+const $=id=>document.getElementById(id);
+let cars=[];
+let requests=[];
+
+function say(text,error=false){
+ $("message").textContent=text;
+ $("message").style.color=error?"#ff7777":"#d6ad52";
+}
+function esc(v){
+ return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function go(name){
+ document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+ $(name).classList.add("active");
+ document.querySelectorAll(".nav").forEach(b=>b.classList.toggle("active",b.dataset.section===name));
+ if(name==="vehicles")loadCars();
+ if(name==="requests")loadRequests();
+ if(name==="posts")loadPosts();
+}
+document.querySelectorAll(".nav").forEach(b=>b.addEventListener("click",()=>go(b.dataset.section)));
+
+async function enterDashboard(){
+ const {data:{user}}=await db.auth.getUser();
+ if(!user||user.app_metadata?.role!=="admin"){
+  await db.auth.signOut();
+  say("Access denied. Please use an administrator account.",true);
+  return;
+ }
+ $("loginPanel").classList.add("hidden");
+ $("app").classList.remove("hidden");
+ $("logout").classList.remove("hidden");
+ await refreshOverview();
+}
+$("loginForm").addEventListener("submit",async e=>{
+ e.preventDefault();say("Signing in...");
+ const {error}=await db.auth.signInWithPassword({
+  email:$("email").value.trim(),password:$("password").value
+ });
+ if(error){say("Login failed: "+error.message,true);return;}
+ await enterDashboard();
+});
+$("logout").addEventListener("click",async()=>{
+ await db.auth.signOut();
+ $("app").classList.add("hidden");
+ $("loginPanel").classList.remove("hidden");
+ $("logout").classList.add("hidden");
+ say("Signed out.");
+});
+db.auth.onAuthStateChange((_event,session)=>{
+ if(!session){
+  $("app").classList.add("hidden");
+  $("loginPanel").classList.remove("hidden");
+  $("logout").classList.add("hidden");
+ }
+});
+
+async function refreshOverview(){
+ const [c,r]=await Promise.all([
+  db.from("cars").select("id,status"),
+  db.from("car_requests").select("id,status")
+ ]);
+ if(c.error){say("Could not load vehicle statistics: "+c.error.message,true);return;}
+ if(r.error){say("Could not load request statistics: "+r.error.message,true);return;}
+ $("totalCars").textContent=c.data.length;
+ $("availableCars").textContent=c.data.filter(x=>x.status==="available").length;
+ $("soldCars").textContent=c.data.filter(x=>x.status==="sold").length;
+ $("pendingRequests").textContent=r.data.filter(x=>x.status==="pending").length;
+}
+
+async function loadCars(){
+ $("carList").innerHTML="<p class='muted'>Loading vehicles...</p>";
+ const {data,error}=await db.from("cars").select("*").order("created_at",{ascending:false});
+ if(error){$("carList").innerHTML="";say("Vehicle loading failed: "+error.message,true);return;}
+ cars=data||[];
+ renderCars();
+ refreshOverview();
+}
+function renderCars(){
+ const q=$("carSearch").value.toLowerCase();
+ const filtered=cars.filter(c=>(c.title+" "+c.brand+" "+c.model).toLowerCase().includes(q));
+ if(!filtered.length){$("carList").innerHTML="<div class='panel'>No vehicles found.</div>";return;}
+ $("carList").innerHTML=filtered.map(c=>`
+ <article class="item">
+  <h3>${esc(c.title)}</h3>
+  <span class="tag">${esc(c.status)}</span>
+  ${c.is_distress_sale?'<span class="tag">DISTRESS SALE</span>':''}
+  ${c.is_featured?'<span class="tag">FEATURED</span>':''}
+  <p>${esc(c.brand)} ${esc(c.model)} · ${esc(c.year||"Year not set")}</p>
+  <p><strong>₦${Number(c.price||0).toLocaleString("en-NG")}</strong></p>
+  <p>${esc(c.location)} · ${esc(c.condition||"Condition not set")}</p>
+  <div class="photos">${(c.image_urls||[]).map(u=>`<a href="${esc(u)}" target="_blank" rel="noopener"><img src="${esc(u)}" alt="Vehicle photo"></a>`).join("")}</div>
+  <div class="actions">
+   <button class="primary" onclick="editCar('${c.id}')">Edit</button>
+   <button class="secondary" onclick="toggleCar('${c.id}','status','${c.status==="sold"?"available":"sold"}')">${c.status==="sold"?"Mark Available":"Mark Sold"}</button>
+   <button class="secondary" onclick="toggleCar('${c.id}','is_distress_sale',${!c.is_distress_sale})">${c.is_distress_sale?"Remove Distress":"Mark Distress Sale"}</button>
+   <button class="secondary" onclick="toggleCar('${c.id}','is_featured',${!c.is_featured})">${c.is_featured?"Unfeature":"Feature"}</button>
+   <button class="danger" onclick="deleteCar('${c.id}')">Delete</button>
+  </div>
+ </article>`).join("");
+}
+$("carSearch").addEventListener("input",renderCars);
+
+function newCar(){
+ resetCarForm();
+ $("carFormPanel").scrollIntoView({behavior:"smooth"});
+}
+function resetCarForm(){
+ $("carForm").reset();$("carId").value="";
+ $("carLocation").value="Abuja, Nigeria";
+ $("carFormTitle").textContent="Add New Vehicle";
+}
+function editCar(id){
+ const c=cars.find(x=>x.id===id);if(!c)return;
+ $("carId").value=c.id;
+ $("carTitle").value=c.title||"";
+ $("carBrand").value=c.brand||"";
+ $("carModel").value=c.model||"";
+ $("carYear").value=c.year||"";
+ $("carPrice").value=c.price??"";
+ $("carMileage").value=c.mileage??"";
+ $("carTransmission").value=c.transmission||"";
+ $("carFuel").value=c.fuel_type||"";
+ $("carCondition").value=c.condition||"";
+ $("carLocation").value=c.location||"Abuja, Nigeria";
+ $("carStatus").value=c.status;
+ $("carDescription").value=c.description||"";
+ $("carDistress").checked=!!c.is_distress_sale;
+ $("carFeatured").checked=!!c.is_featured;
+ $("carFormTitle").textContent="Edit Vehicle";
+ $("carFormPanel").scrollIntoView({behavior:"smooth"});
+}
+async function uploadPhotos(files,folder){
+ if(files.length>5)throw Error("Choose no more than 5 photos.");
+ const urls=[];
+ for(const file of files){
+  if(!["image/jpeg","image/png","image/webp"].includes(file.type)||file.size>5*1024*1024)
+   throw Error("Photos must be JPG, PNG or WebP and no larger than 5 MB.");
+  const ext=file.name.split(".").pop().toLowerCase();
+  const path=`${folder}/${crypto.randomUUID()}.${ext}`;
+  const {error}=await db.storage.from("car-photos").upload(path,file,{contentType:file.type});
+  if(error)throw error;
+  urls.push(db.storage.from("car-photos").getPublicUrl(path).data.publicUrl);
+ }
+ return urls;
+}
+$("carForm").addEventListener("submit",async e=>{
+ e.preventDefault();say("Saving vehicle...");
+ try{
+  const id=$("carId").value;
+  const files=Array.from($("carPhotos").files);
+  let imageUrls=[];
+  if(files.length)imageUrls=await uploadPhotos(files,"incoming");
+  const payload={
+   title:$("carTitle").value.trim(),
+   brand:$("carBrand").value.trim(),
+   model:$("carModel").value.trim(),
+   year:$("carYear").value?Number($("carYear").value):null,
+   price:$("carPrice").value?Number($("carPrice").value):null,
+   mileage:$("carMileage").value?Number($("carMileage").value):null,
+   transmission:$("carTransmission").value||null,
+   fuel_type:$("carFuel").value||null,
+   condition:$("carCondition").value||null,
+   location:$("carLocation").value.trim(),
+   description:$("carDescription").value.trim()||null,
+   status:$("carStatus").value,
+   is_distress_sale:$("carDistress").checked,
+   is_featured:$("carFeatured").checked,
+   updated_at:new Date().toISOString()
+  };
+  if(files.length)payload.image_urls=imageUrls;
+  const result=id
+   ?await db.from("cars").update(payload).eq("id",id)
+   :await db.from("cars").insert(payload);
+  if(result.error)throw result.error;
+  resetCarForm();say("Vehicle saved successfully.");
+  await loadCars();await refreshOverview();
+ }catch(error){say("Could not save vehicle: "+error.message,true);}
+});
+async function toggleCar(id,field,value){
+ const {error}=await db.from("cars").update({[field]:value,updated_at:new Date().toISOString()}).eq("id",id);
+ if(error){say("Update failed: "+error.message,true);return;}
+ say("Vehicle updated.");await loadCars();await refreshOverview();
+}
+async function deleteCar(id){
+ if(!confirm("Permanently delete this vehicle listing?"))return;
+ const {error}=await db.from("cars").delete().eq("id",id);
+ if(error){say("Delete failed: "+error.message,true);return;}
+ say("Vehicle deleted.");await loadCars();await refreshOverview();
+}
+
+async function loadRequests(){
+ $("requestList").innerHTML="<p class='muted'>Loading requests...</p>";
+ const {data,error}=await db.from("car_requests").select("*").order("created_at",{ascending:false});
+ if(error){$("requestList").innerHTML="";say("Request loading failed: "+error.message,true);return;}
+ requests=data||[];
+ if(!requests.length){$("requestList").innerHTML="<div class='item'>No customer requests yet.</div>";return;}
+ $("requestList").innerHTML=requests.map(r=>`
+ <article class="item">
+  <h3>${esc(r.brand)} ${esc(r.model)}</h3>
+  <span class="tag">${esc(r.request_type)}</span><span class="tag">${esc(r.status)}</span>
+  <p>Customer: ${esc(r.customer_name)}<br>Phone: ${esc(r.customer_phone)}<br>
+  Year: ${esc(r.year||"Not supplied")}<br>Condition: ${esc(r.condition||"Not supplied")}<br>
+  Location: ${esc(r.location)}<br>Expected price: ${r.expected_price==null?"Not supplied":"₦"+Number(r.expected_price).toLocaleString("en-NG")}<br>
+  Wants in exchange: ${esc(r.wanted_car||"Not applicable")}<br>
+  Description: ${esc(r.description||"None")}</p>
+  <div class="photos">${(r.photo_urls||[]).map(u=>`<a href="${esc(u)}" target="_blank" rel="noopener"><img src="${esc(u)}" alt="Customer car"></a>`).join("")}</div>
+  ${r.status==="pending"?`<div class="actions">
+   <button class="primary" onclick="approveRequest('${r.id}')">Approve & Publish</button>
+   <button class="danger" onclick="rejectRequest('${r.id}')">Reject</button>
+  </div>`:""}
+ </article>`).join("");
+ refreshOverview();
+}
+async function approveRequest(id){
+ if(!confirm("Approve and publish this vehicle?"))return;
+ say("Publishing vehicle...");
+ const {error}=await db.rpc("approve_car_request",{p_request_id:id});
+ if(error){say("Approval failed: "+error.message,true);return;}
+ say("Approved! Vehicle published.");await loadRequests();await loadCars();await refreshOverview();
+}
+async function rejectRequest(id){
+ if(!confirm("Reject this customer request?"))return;
+ const {error}=await db.from("car_requests").update({status:"rejected",updated_at:new Date().toISOString()}).eq("id",id).eq("status","pending");
+ if(error){say("Rejection failed: "+error.message,true);return;}
+ say("Request rejected.");await loadRequests();await refreshOverview();
+}
+
+function newPost(){resetPostForm();$("postForm").scrollIntoView({behavior:"smooth"});}
+function resetPostForm(){
+ $("postForm").reset();$("postId").value="";
+ $("postStatus").value="draft";$("postFormTitle").textContent="Create a Website Post";
+}
+async function loadPosts(){
+ $("postList").innerHTML="<p class='muted'>Loading posts...</p>";
+ const {data,error}=await db.from("website_posts").select("*").order("created_at",{ascending:false});
+ if(error){$("postList").innerHTML="";say("Post loading failed: "+error.message,true);return;}
+ if(!data.length){$("postList").innerHTML="<div class='item'>No posts yet.</div>";return;}
+ $("postList").innerHTML=data.map(p=>`
+ <article class="item">
+  <h3>${esc(p.title)}</h3><span class="tag">${esc(p.post_type)}</span><span class="tag">${esc(p.status)}</span>
+  <p>${esc(p.content)}</p>
+  ${p.image_url?`<img src="${esc(p.image_url)}" alt="Post image">`:""}
+  <div class="actions">
+   <button class="primary" onclick="editPost('${p.id}')">Edit</button>
+   <button class="secondary" onclick="togglePost('${p.id}','${p.status==="published"?"draft":"published"}')">${p.status==="published"?"Unpublish":"Publish"}</button>
+   <button class="danger" onclick="deletePost('${p.id}')">Delete</button>
+  </div>
+ </article>`).join("");
+}
+function editPost(id){
+ db.from("website_posts").select("*").eq("id",id).single().then(({data,error})=>{
+  if(error){say(error.message,true);return;}
+  $("postId").value=data.id;$("postTitle").value=data.title;
+  $("postType").value=data.post_type;$("postContent").value=data.content;
+  $("postImage").value=data.image_url||"";$("postStatus").value=data.status;
+  $("postFormTitle").textContent="Edit Website Post";
+  $("postForm").scrollIntoView({behavior:"smooth"});
+ });
+}
+$("postForm").addEventListener("submit",async e=>{
+ e.preventDefault();say("Saving post...");
+ const id=$("postId").value;
+ const payload={
+  title:$("postTitle").value.trim(),
+  post_type:$("postType").value,
+  content:$("postContent").value.trim(),
+  image_url:$("postImage").value.trim()||null,
+  status:$("postStatus").value,
+  updated_at:new Date().toISOString()
+ };
+ const result=id
+  ?await db.from("website_posts").update(payload).eq("id",id)
+  :await db.from("website_posts").insert(payload);
+ if(result.error){say("Post save failed: "+result.error.message,true);return;}
+ resetPostForm();say("Post saved successfully.");await loadPosts();
+});
+async function togglePost(id,status){
+ const {error}=await db.from("website_posts").update({status,updated_at:new Date().toISOString()}).eq("id",id);
+ if(error){say(error.message,true);return;}
+ say("Post status updated.");await loadPosts();
+}
+async function deletePost(id){
+ if(!confirm("Permanently delete this post?"))return;
+ const {error}=await db.from("website_posts").delete().eq("id",id);
+ if(error){say(error.message,true);return;}
+ say("Post deleted.");await loadPosts();
+}
+
+async function checkLogin(){
+ const {data:{session}}=await db.auth.getSession();
+ if(session)await enterDashboard();
+}
+checkLogin();
+</script>
+</body>
+</html>
+
