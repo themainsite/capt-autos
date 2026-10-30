@@ -1,0 +1,520 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#080808">
+<title>Available Cars | CAPT AUTOS</title>
+
+<style>
+:root {
+  --gold: #d5ad55;
+  --black: #080808;
+  --panel: #151515;
+  --muted: #aaa;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--black);
+  color: #fff;
+  font-family: Arial, sans-serif;
+}
+
+header {
+  padding: 18px 7%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #292929;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--gold);
+  font-size: 22px;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.logo img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+
+header a {
+  color: var(--gold);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.hero {
+  text-align: center;
+  padding: 65px 20px 45px;
+  background: linear-gradient(180deg, #17130b, #080808);
+}
+
+.hero small {
+  color: var(--gold);
+  letter-spacing: 3px;
+  font-weight: bold;
+}
+
+.hero h1 {
+  font-size: clamp(32px, 6vw, 55px);
+  margin: 15px 0;
+}
+
+.hero p {
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.filters {
+  max-width: 1100px;
+  margin: 35px auto;
+  padding: 0 20px;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 12px;
+}
+
+.filters input,
+.filters select {
+  width: 100%;
+  padding: 15px;
+  background: #171717;
+  border: 1px solid #383838;
+  border-radius: 8px;
+  color: white;
+  outline: none;
+}
+
+.filters input:focus,
+.filters select:focus {
+  border-color: var(--gold);
+}
+
+.inventory {
+  max-width: 1200px;
+  margin: auto;
+  padding: 0 20px 70px;
+}
+
+.inventory-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.inventory-heading h2 {
+  font-size: 24px;
+}
+
+.inventory-heading span {
+  color: var(--gold);
+  font-size: 14px;
+}
+
+.car-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+}
+
+.car-card {
+  background: var(--panel);
+  border: 1px solid #292929;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: .25s;
+}
+
+.car-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--gold);
+}
+
+.car-image {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  background: #222;
+}
+
+.car-content {
+  padding: 20px;
+}
+
+.car-content h3 {
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+
+.price {
+  color: var(--gold);
+  font-size: 23px;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+.car-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-bottom: 18px;
+}
+
+.car-details span {
+  background: #252525;
+  color: #ccc;
+  padding: 7px 9px;
+  border-radius: 5px;
+  font-size: 12px;
+}
+
+.car-location {
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 18px;
+}
+
+.car-description {
+  color: #bbb;
+  font-size: 13px;
+  line-height: 1.6;
+  margin-bottom: 18px;
+}
+
+.enquire {
+  display: block;
+  text-align: center;
+  padding: 13px;
+  background: var(--gold);
+  color: #080808;
+  text-decoration: none;
+  border-radius: 7px;
+  font-weight: bold;
+  transition: .2s;
+}
+
+.enquire:hover {
+  background: #f0ca75;
+}
+
+.empty {
+  text-align: center;
+  padding: 65px 20px;
+  border: 1px dashed #444;
+  border-radius: 12px;
+  color: var(--muted);
+  grid-column: 1 / -1;
+}
+
+.empty h3 {
+  color: white;
+  margin-bottom: 12px;
+}
+
+footer {
+  text-align: center;
+  padding: 28px 15px;
+  border-top: 1px solid #292929;
+  color: #888;
+  font-size: 13px;
+}
+
+footer strong {
+  color: var(--gold);
+}
+
+@media (max-width: 850px) {
+  .car-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  header {
+    padding: 15px 5%;
+  }
+
+  .logo {
+    font-size: 17px;
+  }
+
+  .logo img {
+    width: 38px;
+    height: 38px;
+  }
+
+  .filters {
+    grid-template-columns: 1fr;
+  }
+
+  .car-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .car-image {
+    height: 230px;
+  }
+
+  .inventory-heading h2 {
+    font-size: 20px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">
+    <img src="capt-autos-logo.PNG" alt="CAPT AUTOS Logo">
+    <span>CAPT AUTOS</span>
+  </div>
+
+  <a href="index.html">← Back to Home</a>
+</header>
+
+<section class="hero">
+  <small>BUY · SELL · SWAP</small>
+  <h1>Find Your Next Car</h1>
+  <p>Explore available vehicles at CAPT AUTOS.<br>
+  Quality vehicles. Trusted service. Nationwide delivery.</p>
+</section>
+
+<section class="filters">
+  <input
+    type="search"
+    id="searchInput"
+    placeholder="Search by car name, brand or model..."
+  >
+
+  <select id="brandFilter">
+    <option value="">All Brands</option>
+  </select>
+
+  <select id="conditionFilter">
+    <option value="">All Conditions</option>
+    <option value="Brand New">Brand New</option>
+    <option value="Foreign Used">Foreign Used</option>
+    <option value="Nigerian Used">Nigerian Used</option>
+  </select>
+</section>
+
+<main class="inventory">
+  <div class="inventory-heading">
+    <h2>Available Vehicles</h2>
+    <span id="carCount">0 Vehicles</span>
+  </div>
+
+  <div class="car-grid" id="carGrid"></div>
+</main>
+
+<footer>
+  <p><strong>CAPT AUTOS</strong> — BUY · SELL · SWAP</p>
+  <p style="margin-top:8px;">Abuja, Nigeria · Nationwide Delivery Available</p>
+  <p style="margin-top:8px;">© <span id="year"></span> CAPT AUTOS. All rights reserved.</p>
+</footer>
+
+<script>
+const WHATSAPP_NUMBER = "2349110895033";
+const STORAGE_KEY = "captAutosDemoCars";
+
+const carGrid = document.getElementById("carGrid");
+const searchInput = document.getElementById("searchInput");
+const brandFilter = document.getElementById("brandFilter");
+const conditionFilter = document.getElementById("conditionFilter");
+const carCount = document.getElementById("carCount");
+
+document.getElementById("year").textContent =
+  new Date().getFullYear();
+
+function getCars() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    return Array.isArray(saved) ? saved : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function formatPrice(price) {
+  const amount = Number(price);
+
+  if (!Number.isFinite(amount)) {
+    return "Price on request";
+  }
+
+  return "₦" + amount.toLocaleString("en-NG");
+}
+
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[char]);
+}
+
+function loadBrands(cars) {
+  const currentValue = brandFilter.value;
+
+  const brands = [...new Set(
+    cars.map(car => car.brand).filter(Boolean)
+  )].sort();
+
+  brandFilter.innerHTML =
+    '<option value="">All Brands</option>';
+
+  brands.forEach(brand => {
+    const option = document.createElement("option");
+    option.value = brand;
+    option.textContent = brand;
+    brandFilter.appendChild(option);
+  });
+
+  if (brands.includes(currentValue)) {
+    brandFilter.value = currentValue;
+  }
+}
+
+function renderCars() {
+  const allCars = getCars();
+
+  // Only show vehicles marked as available.
+  const availableCars = allCars.filter(car =>
+    String(car.status || "").toLowerCase() === "available"
+  );
+
+  loadBrands(availableCars);
+
+  const search = searchInput.value.trim().toLowerCase();
+  const selectedBrand = brandFilter.value;
+  const selectedCondition = conditionFilter.value;
+
+  const filteredCars = availableCars.filter(car => {
+    const searchableText = [
+      car.title,
+      car.brand,
+      car.model,
+      car.year,
+      car.location
+    ].join(" ").toLowerCase();
+
+    const matchesSearch = searchableText.includes(search);
+
+    const matchesBrand =
+      !selectedBrand || car.brand === selectedBrand;
+
+    const matchesCondition =
+      !selectedCondition || car.condition === selectedCondition;
+
+    return matchesSearch && matchesBrand && matchesCondition;
+  });
+
+  carCount.textContent =
+    `${filteredCars.length} ${filteredCars.length === 1 ? "Vehicle" : "Vehicles"}`;
+
+  if (filteredCars.length === 0) {
+    carGrid.innerHTML = `
+      <div class="empty">
+        <h3>No Vehicles Found</h3>
+        <p>There are currently no matching available vehicles.</p>
+        <p style="margin-top:10px;">Please check back soon or contact us on WhatsApp.</p>
+      </div>
+    `;
+    return;
+  }
+
+  carGrid.innerHTML = filteredCars.map(car => {
+    const title = escapeHTML(
+      car.title || `${car.brand || ""} ${car.model || ""}`
+    );
+
+    const image = car.photo
+      ? `<img class="car-image" src="${car.photo}" alt="${title}">`
+      : `<div class="car-image" style="display:grid;place-items:center;color:#999;">Photo unavailable</div>`;
+
+    const message = encodeURIComponent(
+      `Hello CAPT AUTOS, I am interested in this vehicle:\n\n` +
+      `Vehicle: ${car.title || car.brand + " " + car.model}\n` +
+      `Price: ${formatPrice(car.price)}\n` +
+      `Location: ${car.location || "Not specified"}\n\n` +
+      `Please provide more details.`
+    );
+
+    const whatsappLink =
+      `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
+
+    return `
+      <article class="car-card">
+        ${image}
+
+        <div class="car-content">
+          <h3>${title}</h3>
+
+          <div class="price">${formatPrice(car.price)}</div>
+
+          <div class="car-details">
+            ${car.year ? `<span>${escapeHTML(car.year)}</span>` : ""}
+            ${car.mileage ? `<span>${escapeHTML(car.mileage)} km</span>` : ""}
+            ${car.transmission ? `<span>${escapeHTML(car.transmission)}</span>` : ""}
+            ${car.fuel ? `<span>${escapeHTML(car.fuel)}</span>` : ""}
+            ${car.condition ? `<span>${escapeHTML(car.condition)}</span>` : ""}
+          </div>
+
+          <p class="car-location">
+            📍 ${escapeHTML(car.location || "Abuja, Nigeria")}
+          </p>
+
+          ${car.description ? `
+            <p class="car-description">
+              ${escapeHTML(car.description)}
+            </p>
+          ` : ""}
+
+          <a
+            class="enquire"
+            href="${whatsappLink}"
+            target="_blank"
+            rel="noopener"
+          >
+            Enquire on WhatsApp
+          </a>
+        </div>
+      </article>
+    `;
+  }).join("");
+}
+
+searchInput.addEventListener("input", renderCars);
+brandFilter.addEventListener("change", renderCars);
+conditionFilter.addEventListener("change", renderCars);
+
+// Refresh when changes are made in another tab.
+window.addEventListener("storage", event => {
+  if (event.key === STORAGE_KEY) {
+    renderCars();
+  }
+});
+
+renderCars();
+</script>
+
+</body>
+</html>
