@@ -1,0 +1,567 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#090a0d">
+<title>CAPT AUTOS | Luxury Management Centre</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+--gold:#e6bd6c;
+--gold2:#ffe4a7;
+--bg:#08090d;
+--text:#f5f5f7;
+--muted:#9296a2;
+--glass:rgba(255,255,255,.055);
+--line:rgba(255,255,255,.105);
+--shadow:0 20px 65px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+margin:0;min-height:100vh;color:var(--text);
+font-family:'DM Sans',sans-serif;
+background:
+radial-gradient(ellipse at 12% 8%,rgba(191,143,63,.16),transparent 35%),
+radial-gradient(ellipse at 90% 75%,rgba(61,87,140,.10),transparent 38%),
+linear-gradient(145deg,#08090d,#111219 55%,#08090d);
+background-attachment:fixed
+}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer;border:1px solid transparent;border-radius:12px;padding:12px 17px;font-weight:700;transition:.25s}
+button:hover{transform:translateY(-2px);filter:brightness(1.12)}
+.primary{color:#17120a;background:linear-gradient(135deg,#ffe3a0,#d2a34b);box-shadow:0 7px 25px rgba(214,173,82,.16)}
+.secondary{color:white;background:rgba(255,255,255,.07);border-color:var(--line)}
+.danger{color:#ffb8b8;background:rgba(210,65,65,.14);border-color:rgba(255,90,90,.2)}
+.success{color:#a9efc2;background:rgba(40,180,100,.15)}
+.hidden{display:none!important}
+header{
+min-height:82px;padding:12px 5%;display:flex;align-items:center;justify-content:space-between;gap:15px;
+position:sticky;top:0;z-index:30;
+background:rgba(9,10,14,.78);border-bottom:1px solid var(--line);
+backdrop-filter:blur(28px) saturate(160%);
+-webkit-backdrop-filter:blur(28px) saturate(160%)
+}
+header img{width:145px;max-height:58px;object-fit:contain;filter:drop-shadow(0 4px 15px rgba(214,173,82,.13))}
+header strong{color:var(--gold2);font-family:Manrope,sans-serif;font-size:12px;letter-spacing:3px;font-weight:800}
+header button{font-size:12px}
+.layout{display:flex;min-height:calc(100vh - 82px);max-width:1800px;margin:auto;padding:25px;gap:24px}
+aside{
+width:245px;flex-shrink:0;height:fit-content;min-height:430px;position:sticky;top:105px;
+padding:17px 12px;border:1px solid var(--line);border-radius:23px;
+background:rgba(255,255,255,.045);backdrop-filter:blur(25px);
+-webkit-backdrop-filter:blur(25px);box-shadow:var(--shadow)
+}
+.brand-label{padding:12px 14px 20px;color:#777d89;font-size:10px;letter-spacing:2px;font-weight:800}
+.nav{
+display:block;width:100%;text-align:left;margin:7px 0;padding:15px 16px;border-radius:13px;
+background:transparent;color:#aeb1bc;font-size:13px;font-weight:600;border:1px solid transparent
+}
+.nav.active{color:var(--gold2);background:linear-gradient(110deg,rgba(214,173,82,.19),rgba(214,173,82,.045));border-color:rgba(214,173,82,.2);box-shadow:inset 3px 0 var(--gold)}
+.nav:hover{color:white;background:rgba(255,255,255,.07)}
+main{flex:1;min-width:0;max-width:1350px;margin:auto;padding:12px 5px 50px}
+h1,h2,h3{font-family:Manrope,sans-serif}
+h1{color:#fff;font-size:clamp(25px,3vw,36px);font-weight:800;letter-spacing:-1.2px;margin:0 0 10px}
+h2{color:var(--gold2);font-size:19px;margin-top:0}
+h3{color:#f5d999;font-size:18px}
+.muted{color:var(--muted);line-height:1.8;font-size:13px}
+.panel,.item,.stat{
+position:relative;overflow:hidden;
+background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.025));
+border:1px solid rgba(255,255,255,.105);border-radius:21px;
+box-shadow:0 15px 45px rgba(0,0,0,.18),inset 0 1px rgba(255,255,255,.07);
+backdrop-filter:blur(22px) saturate(140%);-webkit-backdrop-filter:blur(22px) saturate(140%)
+}
+.panel{padding:25px;margin-bottom:23px}
+.item{padding:23px;margin-bottom:16px;transition:.3s}
+.item:hover{transform:translateY(-3px);border-color:rgba(214,173,82,.3)}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px;margin-top:27px}
+.stat{padding:23px;min-height:125px}
+.stat small{color:#a9aab3;font-size:12px;font-weight:600;letter-spacing:.5px}
+.stat strong{display:block;margin-top:17px;font-family:Manrope,sans-serif;font-size:clamp(27px,3vw,36px);color:var(--gold2);letter-spacing:-1px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+label{display:block;color:#d8bd83;font-size:12px;font-weight:700;letter-spacing:.3px;margin:17px 0 8px}
+input,select,textarea{
+width:100%;padding:14px 15px;color:white;background:rgba(0,0,0,.28);
+border:1px solid rgba(255,255,255,.13);border-radius:12px;outline:none;transition:.25s
+}
+input:focus,select:focus,textarea:focus{border-color:rgba(231,189,103,.75);box-shadow:0 0 0 4px rgba(231,189,103,.09);background:rgba(0,0,0,.42)}
+input::placeholder,textarea::placeholder{color:#70737e}
+select option{background:#15161b;color:white}
+textarea{min-height:115px;resize:vertical}
+input[type=checkbox]{accent-color:var(--gold);width:17px;height:17px;vertical-align:middle}
+.form-actions,.actions{display:flex;align-items:center;flex-wrap:wrap;gap:9px;margin-top:20px}
+.form-actions button,.actions button{font-size:12px}
+.item{overflow-wrap:anywhere}
+.item p{line-height:1.7;color:#c6c7cd;font-size:13px}
+.photos{display:flex;flex-wrap:wrap;gap:9px;margin:15px 0}
+.item img{width:125px;height:95px;object-fit:cover;border-radius:12px;border:1px solid var(--line);transition:.25s}
+.item img:hover{transform:scale(1.04)}
+.tag{display:inline-block;color:var(--gold2);background:rgba(214,173,82,.12);border:1px solid rgba(214,173,82,.18);padding:6px 11px;border-radius:30px;font-size:10px;font-weight:800;letter-spacing:.5px;margin:3px;text-transform:uppercase}
+.search{margin:15px 0 22px;max-width:450px}
+#message{min-height:25px;padding:8px 2px;font-size:13px;font-weight:600}
+.section{display:none;animation:appear .35s ease}
+.section.active{display:block}
+@keyframes appear{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
+.welcome{padding:27px 28px;margin-bottom:20px;background:linear-gradient(110deg,rgba(214,173,82,.13),rgba(255,255,255,.025));border:1px solid rgba(214,173,82,.17);border-radius:22px}
+.welcome span{color:var(--gold);font-size:10px;font-weight:800;letter-spacing:2px}
+.welcome h1{margin-top:10px}
+.empty{text-align:center;padding:35px 15px;color:var(--muted)}
+#loginPanel{width:min(440px,calc(100% - 32px));margin:9vh auto;padding:38px;border:1px solid rgba(255,255,255,.13);border-radius:28px;background:linear-gradient(145deg,rgba(255,255,255,.10),rgba(255,255,255,.025));backdrop-filter:blur(35px);-webkit-backdrop-filter:blur(35px);box-shadow:var(--shadow),inset 0 1px rgba(255,255,255,.12)}
+#loginPanel h1{font-size:29px}
+#loginPanel form button{width:100%;margin-top:25px;padding:15px}
+.login-mark{color:var(--gold);font-size:11px;font-weight:800;letter-spacing:3px;margin-bottom:17px}
+.small-note{font-size:11px;color:var(--muted);line-height:1.6}
+@media(max-width:950px){
+.layout{padding:17px;gap:16px}aside{width:205px}
+.stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:700px){
+header{min-height:72px;padding:10px 15px}
+header img{width:112px;max-height:48px}
+header strong{font-size:9px;letter-spacing:1.5px}
+.layout{display:block;padding:12px}
+aside{width:100%;min-height:auto;display:flex;overflow-x:auto;position:sticky;top:72px;z-index:15;padding:8px;border-radius:16px;gap:5px}
+.brand-label{display:none}
+.nav{width:auto;flex-shrink:0;white-space:nowrap;margin:0;padding:12px 14px;font-size:11px}
+.nav.active{box-shadow:inset 0 -2px var(--gold)}
+main{padding:22px 2px 45px}
+.panel{padding:19px;border-radius:18px}
+.item{padding:18px}
+.stats{gap:10px}
+.stat{padding:17px;min-height:105px}
+.stat strong{font-size:28px}
+.grid{grid-template-columns:1fr;gap:5px}
+.actions button{flex:1 1 auto}
+#loginPanel{padding:27px;margin-top:7vh}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+
+<header>
+<img src="capt-autos-logo.PNG" alt="CAPT AUTOS Logo">
+<strong>MANAGEMENT CENTRE</strong>
+<button id="logout" class="secondary hidden">SIGN OUT</button>
+</header>
+
+<section id="loginPanel">
+<div class="login-mark">CAPT AUTOS · PRIVATE ACCESS</div>
+<h1>Welcome Back.</h1>
+<p class="muted">Sign in to your dealership management centre.</p>
+<form id="loginForm">
+<label>Email address</label>
+<input id="email" type="email" autocomplete="username" required placeholder="Admin email">
+<label>Password</label>
+<input id="password" type="password" autocomplete="current-password" required placeholder="Your password">
+<button class="primary" type="submit">ACCESS DASHBOARD →</button>
+</form>
+<p class="small-note">Authorised administrators only.</p>
+</section>
+
+<div id="app" class="layout hidden">
+<aside>
+<div class="brand-label">MANAGEMENT</div>
+<button class="nav active" data-section="overview">◈ &nbsp; Overview</button>
+<button class="nav" data-section="vehicles">🚘 &nbsp; Vehicles</button>
+<button class="nav" data-section="requests">♧ &nbsp; Customer Requests</button>
+<button class="nav" data-section="posts">✦ &nbsp; Website Posts</button>
+</aside>
+
+<main>
+<div id="message" role="status" aria-live="polite"></div>
+
+<section id="overview" class="section active">
+<div class="welcome">
+<span>CAPT AUTOS / MANAGEMENT</span>
+<h1>Your Dealership. Your Control.</h1>
+<p class="muted">Welcome to your private management centre. Everything you need to manage your automotive business, in one place.</p>
+</div>
+<div class="stats">
+<div class="stat"><small>TOTAL VEHICLES</small><strong id="totalCars">0</strong></div>
+<div class="stat"><small>AVAILABLE</small><strong id="availableCars">0</strong></div>
+<div class="stat"><small>SOLD VEHICLES</small><strong id="soldCars">0</strong></div>
+<div class="stat"><small>PENDING REQUESTS</small><strong id="pendingRequests">0</strong></div>
+</div>
+<div class="panel" style="margin-top:23px">
+<h2>Quick Actions</h2>
+<p class="muted">Jump straight into the tasks that matter.</p>
+<div class="form-actions">
+<button class="primary" onclick="go('vehicles');newCar()">＋ Add Vehicle</button>
+<button class="secondary" onclick="go('posts');newPost()">＋ Create Website Post</button>
+<button class="secondary" onclick="go('requests')">Review Customer Requests</button>
+</div>
+</div>
+</section>
+
+<section id="vehicles" class="section">
+<h1>Vehicle Management</h1>
+<p class="muted">Create, update and manage your dealership inventory.</p>
+<div class="panel" id="carFormPanel">
+<h2 id="carFormTitle">＋ Add New Vehicle</h2>
+<form id="carForm">
+<input type="hidden" id="carId">
+<div class="grid">
+<div><label>Vehicle title *</label><input id="carTitle" required placeholder="e.g. Clean Toyota Camry"></div>
+<div><label>Brand *</label><input id="carBrand" required placeholder="Toyota"></div>
+<div><label>Model *</label><input id="carModel" required placeholder="Camry"></div>
+<div><label>Year</label><input id="carYear" type="number" min="1950" max="2100"></div>
+<div><label>Price (₦)</label><input id="carPrice" type="number" min="0"></div>
+<div><label>Mileage</label><input id="carMileage" type="number" min="0"></div>
+<div><label>Transmission</label><select id="carTransmission"><option value="">Select</option><option>Automatic</option><option>Manual</option><option>CVT</option></select></div>
+<div><label>Fuel type</label><select id="carFuel"><option value="">Select</option><option>Petrol</option><option>Diesel</option><option>Hybrid</option><option>Electric</option></select></div>
+<div><label>Condition</label><select id="carCondition"><option value="">Select</option><option>Brand new</option><option>Foreign used</option><option>Nigerian used</option></select></div>
+<div><label>Location</label><input id="carLocation" value="Abuja, Nigeria"></div>
+<div><label>Listing status</label><select id="carStatus"><option value="available">Available</option><option value="pending">Pending</option><option value="sold">Sold</option></select></div>
+<div><label>Vehicle photos</label><input id="carPhotos" type="file" accept="image/jpeg,image/png,image/webp" multiple><span class="small-note">Up to 5 photos, maximum 5 MB each. New uploads replace existing photos when editing.</span></div>
+</div>
+<label>Description</label>
+<textarea id="carDescription" placeholder="Describe the vehicle..."></textarea>
+<div class="grid">
+<label><input id="carDistress" type="checkbox" style="width:auto"> Mark as distress sale</label>
+<label><input id="carFeatured" type="checkbox" style="width:auto"> Feature on homepage</label>
+</div>
+<div class="form-actions">
+<button class="primary" type="submit">SAVE VEHICLE</button>
+<button class="secondary" type="button" onclick="resetCarForm()">CLEAR FORM</button>
+</div>
+</form>
+</div>
+<h2>All Vehicles</h2>
+<input class="search" id="carSearch" placeholder="⌕ Search vehicles...">
+<div id="carList"></div>
+</section>
+
+<section id="requests" class="section">
+<h1>Customer Requests</h1>
+<p class="muted">Review Sell, Swap and Valuation submissions. Approving publishes the vehicle.</p>
+<button class="secondary" onclick="loadRequests()">↻ Refresh Requests</button>
+<div id="requestList" style="margin-top:18px"></div>
+</section>
+
+<section id="posts" class="section">
+<h1>Website Posts</h1>
+<p class="muted">Publish announcements, promotions and dealership updates.</p>
+<div class="panel">
+<h2 id="postFormTitle">＋ Create a Website Post</h2>
+<form id="postForm">
+<input type="hidden" id="postId">
+<label>Post title *</label>
+<input id="postTitle" required maxlength="150" placeholder="e.g. Special Weekend Offers">
+<label>Post type</label>
+<select id="postType"><option value="announcement">Announcement</option><option value="promotion">Promotion / Special Offer</option><option value="update">Dealership Update</option></select>
+<label>Post content *</label>
+<textarea id="postContent" required maxlength="5000" placeholder="Write your announcement or promotion..."></textarea>
+<label>Image URL (optional)</label>
+<input id="postImage" type="url" placeholder="https://...">
+<label>Publication status</label>
+<select id="postStatus"><option value="draft">Save as Draft</option><option value="published">Publish Now</option></select>
+<div class="form-actions">
+<button class="primary" type="submit">SAVE POST</button>
+<button class="secondary" type="button" onclick="resetPostForm()">CLEAR</button>
+</div>
+</form>
+</div>
+<h2>All Posts</h2>
+<div id="postList"></div>
+</section>
+</main>
+</div>
+
+<script>
+const SUPABASE_URL="https://lcfsirumqiqphdwtmktp.supabase.co";
+const SUPABASE_KEY="sb_publishable_5kwR-5Ajh3KJmDWchcykGg_NeIz6S1g";
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const $=id=>document.getElementById(id);
+let cars=[],requests=[];
+
+function say(text,error=false){
+$("message").textContent=text;
+$("message").style.color=error?"#ff7777":"#e6bd6c";
+}
+function esc(v){
+return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function go(name){
+document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+$(name).classList.add("active");
+document.querySelectorAll(".nav").forEach(b=>b.classList.toggle("active",b.dataset.section===name));
+if(name==="vehicles")loadCars();
+if(name==="requests")loadRequests();
+if(name==="posts")loadPosts();
+}
+document.querySelectorAll(".nav").forEach(b=>b.addEventListener("click",()=>go(b.dataset.section)));
+
+async function enterDashboard(){
+const {data:{user},error}=await db.auth.getUser();
+if(error){say("Authentication error: "+error.message,true);return}
+if(!user||user.app_metadata?.role!=="admin"){
+await db.auth.signOut();
+say("Access denied. Please use an administrator account.",true);
+return;
+}
+$("loginPanel").classList.add("hidden");
+$("app").classList.remove("hidden");
+$("logout").classList.remove("hidden");
+await refreshOverview();
+}
+$("loginForm").addEventListener("submit",async e=>{
+e.preventDefault();say("Signing in...");
+const {error}=await db.auth.signInWithPassword({
+email:$("email").value.trim(),password:$("password").value
+});
+if(error){say("Login failed: "+error.message,true);return}
+await enterDashboard();
+});
+$("logout").addEventListener("click",async()=>{
+await db.auth.signOut();
+$("app").classList.add("hidden");
+$("loginPanel").classList.remove("hidden");
+$("logout").classList.add("hidden");
+say("Signed out.");
+});
+db.auth.onAuthStateChange((_event,session)=>{
+if(!session){
+$("app").classList.add("hidden");
+$("loginPanel").classList.remove("hidden");
+$("logout").classList.add("hidden");
+}
+});
+
+async function refreshOverview(){
+const [c,r]=await Promise.all([
+db.from("cars").select("id,status"),
+db.from("car_requests").select("id,status")
+]);
+if(c.error){say("Could not load vehicle statistics: "+c.error.message,true);return}
+if(r.error){say("Could not load request statistics: "+r.error.message,true);return}
+$("totalCars").textContent=c.data.length;
+$("availableCars").textContent=c.data.filter(x=>x.status==="available").length;
+$("soldCars").textContent=c.data.filter(x=>x.status==="sold").length;
+$("pendingRequests").textContent=r.data.filter(x=>x.status==="pending").length;
+}
+
+async function loadCars(){
+$("carList").innerHTML="<p class='muted'>Loading vehicles...</p>";
+const {data,error}=await db.from("cars").select("*").order("created_at",{ascending:false});
+if(error){$("carList").innerHTML="";say("Vehicle loading failed: "+error.message,true);return}
+cars=data||[];renderCars();refreshOverview();
+}
+function renderCars(){
+const q=$("carSearch").value.toLowerCase();
+const filtered=cars.filter(c=>(c.title+" "+c.brand+" "+c.model).toLowerCase().includes(q));
+if(!filtered.length){$("carList").innerHTML="<div class='item empty'>No vehicles found.</div>";return}
+$("carList").innerHTML=filtered.map(c=>`
+<article class="item">
+<h3>${esc(c.title)}</h3>
+<span class="tag">${esc(c.status)}</span>
+${c.is_distress_sale?'<span class="tag">DISTRESS SALE</span>':''}
+${c.is_featured?'<span class="tag">FEATURED</span>':''}
+<p>${esc(c.brand)} ${esc(c.model)} · ${esc(c.year||"Year not set")}</p>
+<p><strong>₦${Number(c.price||0).toLocaleString("en-NG")}</strong></p>
+<p>${esc(c.location)} · ${esc(c.condition||"Condition not set")}</p>
+<div class="photos">${(c.image_urls||[]).map(u=>`<a href="${esc(u)}" target="_blank" rel="noopener"><img src="${esc(u)}" alt="Vehicle photo"></a>`).join("")}</div>
+<div class="actions">
+<button class="primary" onclick="editCar('${c.id}')">Edit</button>
+<button class="secondary" onclick="toggleCar('${c.id}','status','${c.status==="sold"?"available":"sold"}')">${c.status==="sold"?"Mark Available":"Mark Sold"}</button>
+<button class="secondary" onclick="toggleCar('${c.id}','is_distress_sale',${!c.is_distress_sale})">${c.is_distress_sale?"Remove Distress":"Mark Distress Sale"}</button>
+<button class="secondary" onclick="toggleCar('${c.id}','is_featured',${!c.is_featured})">${c.is_featured?"Unfeature":"Feature"}</button>
+<button class="danger" onclick="deleteCar('${c.id}')">Delete</button>
+</div>
+</article>`).join("");
+}
+$("carSearch").addEventListener("input",renderCars);
+
+function newCar(){resetCarForm();$("carFormPanel").scrollIntoView({behavior:"smooth"})}
+function resetCarForm(){
+$("carForm").reset();$("carId").value="";
+$("carLocation").value="Abuja, Nigeria";
+$("carFormTitle").textContent="＋ Add New Vehicle";
+}
+function editCar(id){
+const c=cars.find(x=>x.id===id);if(!c)return;
+$("carId").value=c.id;
+$("carTitle").value=c.title||"";
+$("carBrand").value=c.brand||"";
+$("carModel").value=c.model||"";
+$("carYear").value=c.year||"";
+$("carPrice").value=c.price??"";
+$("carMileage").value=c.mileage??"";
+$("carTransmission").value=c.transmission||"";
+$("carFuel").value=c.fuel_type||"";
+$("carCondition").value=c.condition||"";
+$("carLocation").value=c.location||"Abuja, Nigeria";
+$("carStatus").value=c.status;
+$("carDescription").value=c.description||"";
+$("carDistress").checked=!!c.is_distress_sale;
+$("carFeatured").checked=!!c.is_featured;
+$("carFormTitle").textContent="Edit Vehicle";
+$("carFormPanel").scrollIntoView({behavior:"smooth"});
+}
+async function uploadPhotos(files,folder){
+if(files.length>5)throw Error("Choose no more than 5 photos.");
+const urls=[];
+for(const file of files){
+if(!["image/jpeg","image/png","image/webp"].includes(file.type)||file.size>5*1024*1024)throw Error("Photos must be JPG, PNG or WebP and no larger than 5 MB.");
+const ext=file.name.split(".").pop().toLowerCase();
+const path=`${folder}/${crypto.randomUUID()}.${ext}`;
+const {error}=await db.storage.from("car-photos").upload(path,file,{contentType:file.type});
+if(error)throw error;
+urls.push(db.storage.from("car-photos").getPublicUrl(path).data.publicUrl);
+}
+return urls;
+}
+$("carForm").addEventListener("submit",async e=>{
+e.preventDefault();say("Saving vehicle...");
+try{
+const id=$("carId").value;
+const files=Array.from($("carPhotos").files);
+let imageUrls=[];
+if(files.length)imageUrls=await uploadPhotos(files,"incoming");
+const payload={
+title:$("carTitle").value.trim(),
+brand:$("carBrand").value.trim(),
+model:$("carModel").value.trim(),
+year:$("carYear").value?Number($("carYear").value):null,
+price:$("carPrice").value?Number($("carPrice").value):null,
+mileage:$("carMileage").value?Number($("carMileage").value):null,
+transmission:$("carTransmission").value||null,
+fuel_type:$("carFuel").value||null,
+condition:$("carCondition").value||null,
+location:$("carLocation").value.trim(),
+description:$("carDescription").value.trim()||null,
+status:$("carStatus").value,
+is_distress_sale:$("carDistress").checked,
+is_featured:$("carFeatured").checked,
+updated_at:new Date().toISOString()
+};
+if(files.length)payload.image_urls=imageUrls;
+const result=id?await db.from("cars").update(payload).eq("id",id):await db.from("cars").insert(payload);
+if(result.error)throw result.error;
+resetCarForm();say("Vehicle saved successfully.");
+await loadCars();await refreshOverview();
+}catch(error){say("Could not save vehicle: "+error.message,true)}
+});
+async function toggleCar(id,field,value){
+const {error}=await db.from("cars").update({[field]:value,updated_at:new Date().toISOString()}).eq("id",id);
+if(error){say("Update failed: "+error.message,true);return}
+say("Vehicle updated.");await loadCars();await refreshOverview();
+}
+async function deleteCar(id){
+if(!confirm("Permanently delete this vehicle listing?"))return;
+const {error}=await db.from("cars").delete().eq("id",id);
+if(error){say("Delete failed: "+error.message,true);return}
+say("Vehicle deleted.");await loadCars();await refreshOverview();
+}
+
+async function loadRequests(){
+$("requestList").innerHTML="<p class='muted'>Loading requests...</p>";
+const {data,error}=await db.from("car_requests").select("*").order("created_at",{ascending:false});
+if(error){$("requestList").innerHTML="";say("Request loading failed: "+error.message,true);return}
+requests=data||[];
+if(!requests.length){$("requestList").innerHTML="<div class='item empty'>No customer requests yet.</div>";return}
+$("requestList").innerHTML=requests.map(r=>`
+<article class="item">
+<h3>${esc(r.brand)} ${esc(r.model)}</h3>
+<span class="tag">${esc(r.request_type)}</span><span class="tag">${esc(r.status)}</span>
+<p>Customer: ${esc(r.customer_name)}<br>Phone: ${esc(r.customer_phone)}<br>
+Year: ${esc(r.year||"Not supplied")}<br>Condition: ${esc(r.condition||"Not supplied")}<br>
+Location: ${esc(r.location)}<br>Expected price: ${r.expected_price==null?"Not supplied":"₦"+Number(r.expected_price).toLocaleString("en-NG")}<br>
+Wants in exchange: ${esc(r.wanted_car||"Not applicable")}<br>
+Description: ${esc(r.description||"None")}</p>
+<div class="photos">${(r.photo_urls||[]).map(u=>`<a href="${esc(u)}" target="_blank" rel="noopener"><img src="${esc(u)}" alt="Customer car"></a>`).join("")}</div>
+${r.status==="pending"?`<div class="actions">
+<button class="primary" onclick="approveRequest('${r.id}')">Approve & Publish</button>
+<button class="danger" onclick="rejectRequest('${r.id}')">Reject</button>
+</div>`:""}
+</article>`).join("");
+refreshOverview();
+}
+async function approveRequest(id){
+if(!confirm("Approve and publish this vehicle?"))return;
+say("Publishing vehicle...");
+const {error}=await db.rpc("approve_car_request",{p_request_id:id});
+if(error){say("Approval failed: "+error.message,true);return}
+say("Approved! Vehicle published.");await loadRequests();await loadCars();await refreshOverview();
+}
+async function rejectRequest(id){
+if(!confirm("Reject this customer request?"))return;
+const {error}=await db.from("car_requests").update({status:"rejected",updated_at:new Date().toISOString()}).eq("id",id).eq("status","pending");
+if(error){say("Rejection failed: "+error.message,true);return}
+say("Request rejected.");await loadRequests();await refreshOverview();
+}
+
+function newPost(){resetPostForm();$("postForm").scrollIntoView({behavior:"smooth"})}
+function resetPostForm(){
+$("postForm").reset();$("postId").value="";
+$("postStatus").value="draft";$("postFormTitle").textContent="＋ Create a Website Post";
+}
+async function loadPosts(){
+$("postList").innerHTML="<p class='muted'>Loading posts...</p>";
+const {data,error}=await db.from("website_posts").select("*").order("created_at",{ascending:false});
+if(error){$("postList").innerHTML="";say("Post loading failed: "+error.message,true);return}
+if(!data.length){$("postList").innerHTML="<div class='item empty'>No posts yet.</div>";return}
+$("postList").innerHTML=data.map(p=>`
+<article class="item">
+<h3>${esc(p.title)}</h3><span class="tag">${esc(p.post_type)}</span><span class="tag">${esc(p.status)}</span>
+<p>${esc(p.content)}</p>
+${p.image_url?`<img src="${esc(p.image_url)}" alt="Post image">`:""}
+<div class="actions">
+<button class="primary" onclick="editPost('${p.id}')">Edit</button>
+<button class="secondary" onclick="togglePost('${p.id}','${p.status==="published"?"draft":"published"}')">${p.status==="published"?"Unpublish":"Publish"}</button>
+<button class="danger" onclick="deletePost('${p.id}')">Delete</button>
+</div>
+</article>`).join("");
+}
+function editPost(id){
+db.from("website_posts").select("*").eq("id",id).single().then(({data,error})=>{
+if(error){say(error.message,true);return}
+$("postId").value=data.id;$("postTitle").value=data.title;
+$("postType").value=data.post_type;$("postContent").value=data.content;
+$("postImage").value=data.image_url||"";$("postStatus").value=data.status;
+$("postFormTitle").textContent="Edit Website Post";
+$("postForm").scrollIntoView({behavior:"smooth"});
+});
+}
+$("postForm").addEventListener("submit",async e=>{
+e.preventDefault();say("Saving post...");
+const id=$("postId").value;
+const payload={
+title:$("postTitle").value.trim(),
+post_type:$("postType").value,
+content:$("postContent").value.trim(),
+image_url:$("postImage").value.trim()||null,
+status:$("postStatus").value,
+updated_at:new Date().toISOString()
+};
+const result=id?await db.from("website_posts").update(payload).eq("id",id):await db.from("website_posts").insert(payload);
+if(result.error){say("Post save failed: "+result.error.message,true);return}
+resetPostForm();say("Post saved successfully.");await loadPosts();
+});
+async function togglePost(id,status){
+const {error}=await db.from("website_posts").update({status,updated_at:new Date().toISOString()}).eq("id",id);
+if(error){say(error.message,true);return}
+say("Post status updated.");await loadPosts();
+}
+async function deletePost(id){
+if(!confirm("Permanently delete this post?"))return;
+const {error}=await db.from("website_posts").delete().eq("id",id);
+if(error){say(error.message,true);return}
+say("Post deleted.");await loadPosts();
+}
+
+async function checkLogin(){
+const {data:{session}}=await db.auth.getSession();
+if(session)await enterDashboard();
+}
+checkLogin();
+</script>
+</body>
+</html>
