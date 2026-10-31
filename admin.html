@@ -1,0 +1,523 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#10100f">
+<title>CAPT AUTOS | Command Centre</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+:root{--gold:#d9b978;--gold-light:#f1dcae;--glass:rgba(255,255,255,.075);--line:rgba(255,255,255,.15);--muted:#aaa9a5;--white:#f7f5ef}
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;color:var(--white);font-family:'DM Sans',sans-serif;background:radial-gradient(ellipse at 15% 15%,rgba(166,127,72,.22),transparent 36%),radial-gradient(ellipse at 85% 20%,rgba(102,111,125,.2),transparent 35%),radial-gradient(ellipse at 50% 100%,rgba(110,82,48,.2),transparent 40%),#10100f;overflow-x:hidden}
+button,input,select,textarea{font:inherit}button{cursor:pointer}
+.glass{background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(30px) saturate(165%);-webkit-backdrop-filter:blur(30px) saturate(165%);box-shadow:inset 0 1px 0 rgba(255,255,255,.13),0 20px 60px rgba(0,0,0,.24)}
+.glass-heavy{background:rgba(25,24,22,.72);border:1px solid rgba(255,255,255,.17);backdrop-filter:blur(38px) saturate(170%);-webkit-backdrop-filter:blur(38px) saturate(170%);box-shadow:inset 0 1px 0 rgba(255,255,255,.15),0 24px 70px rgba(0,0,0,.3)}
+#loginScreen{min-height:100vh;display:grid;place-items:center;padding:22px}
+.login-card{width:min(430px,100%);border-radius:32px;padding:35px;text-align:center}
+.brand-logo{width:160px;max-width:70%;height:auto;object-fit:contain;margin-bottom:22px}
+.eyebrow{color:var(--gold);font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase}
+.login-card h1{font:700 27px Manrope,sans-serif;margin:12px 0 8px}
+.subtle{color:var(--muted);font-size:13px;line-height:1.7}
+.field{display:flex;flex-direction:column;gap:8px;margin-top:17px;text-align:left}
+.field label{color:#d5d1c8;font-size:12px;font-weight:600}
+.field input,.field select,.field textarea,.search-input{width:100%;color:white;background:rgba(0,0,0,.24);border:1px solid rgba(255,255,255,.15);border-radius:14px;padding:14px 15px;outline:none;transition:.25s}
+.field textarea{min-height:105px;resize:vertical}
+.field select option{background:#222;color:white}
+.field input:focus,.field select:focus,.field textarea:focus,.search-input:focus{border-color:rgba(217,185,120,.75);box-shadow:0 0 0 3px rgba(217,185,120,.1)}
+.btn{display:inline-flex;justify-content:center;align-items:center;gap:9px;padding:12px 17px;border-radius:13px;border:1px solid rgba(255,255,255,.15);color:white;background:rgba(255,255,255,.08);transition:.25s;font-weight:700;font-size:12px}
+.btn:hover{background:rgba(255,255,255,.15);transform:translateY(-2px);border-color:rgba(255,255,255,.28)}
+.btn-gold{color:#1a1710;background:linear-gradient(135deg,#f1dfb8,#c6a263);border-color:rgba(255,255,255,.4)}
+.btn-gold:hover{background:linear-gradient(135deg,#fff0ce,#d4b477)}
+.btn-danger{color:#ffb3b3;border-color:rgba(255,120,120,.25)}
+.btn-success{color:#a9edc5;border-color:rgba(120,220,160,.25)}
+.btn-small{padding:8px 11px;font-size:11px;border-radius:10px}
+.btn-block{width:100%;margin-top:22px}
+#loginMessage,.message{font-size:12px;margin-top:13px;line-height:1.6}
+.error{color:#ffaaaa}.success{color:#9ee2b6}
+#app{display:none;min-height:100vh;padding:18px}
+.app-layout{max-width:1550px;margin:auto;display:grid;grid-template-columns:245px minmax(0,1fr);gap:18px}
+.sidebar{height:calc(100vh - 36px);min-height:650px;position:sticky;top:18px;border-radius:28px;padding:22px 15px;display:flex;flex-direction:column}
+.sidebar-brand{padding:7px 12px 25px;border-bottom:1px solid rgba(255,255,255,.1)}
+.sidebar-brand img{width:145px;max-width:100%;height:auto;object-fit:contain}
+.sidebar-brand small{display:block;color:var(--muted);margin-top:8px;font-size:10px;letter-spacing:2px}
+.nav-label{color:#888781;font-size:9px;letter-spacing:2px;font-weight:800;padding:25px 12px 10px}
+.nav-btn{display:flex;align-items:center;gap:13px;padding:13px 14px;border-radius:14px;border:1px solid transparent;background:transparent;color:#c2c0ba;text-align:left;width:100%;font-size:12px;margin:3px 0;transition:.25s}
+.nav-icon{font-size:17px;width:20px;text-align:center}
+.nav-btn:hover,.nav-btn.active{color:white;background:rgba(255,255,255,.105);border-color:rgba(255,255,255,.13);box-shadow:inset 0 1px 0 rgba(255,255,255,.1)}
+.nav-btn.active .nav-icon{color:var(--gold-light)}
+.sidebar-bottom{margin-top:auto}
+.admin-profile{display:flex;align-items:center;gap:11px;padding:15px 9px 5px;border-top:1px solid rgba(255,255,255,.1);margin-top:20px}
+.avatar{width:35px;height:35px;border-radius:50%;display:grid;place-items:center;color:#211b10;background:linear-gradient(140deg,#f3e3bd,#bd9554);font-weight:800}
+.admin-profile strong{font-size:11px;display:block}.admin-profile small{color:var(--muted);font-size:10px}
+.main{min-width:0}
+.topbar{min-height:72px;border-radius:22px;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:18px}
+.topbar h2{font:700 16px Manrope,sans-serif}.topbar p{color:var(--muted);font-size:11px;margin-top:5px}
+.top-actions{display:flex;align-items:center;gap:10px}
+.status-indicator{display:flex;align-items:center;gap:7px;color:#b6e5c8;font-size:10px;padding:9px 12px;border-radius:30px;background:rgba(100,190,130,.09);border:1px solid rgba(100,190,130,.17)}
+.status-dot{width:7px;height:7px;border-radius:50%;background:#80d5a0;box-shadow:0 0 12px #80d5a0}
+.mobile-brand,.mobile-nav{display:none}
+.page{display:none;animation:appear .4s ease}.page.active{display:block}
+@keyframes appear{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
+.welcome{min-height:220px;border-radius:28px;padding:30px;position:relative;overflow:hidden;margin-bottom:17px;background:radial-gradient(ellipse at 80% 20%,rgba(220,186,123,.2),transparent 45%),linear-gradient(115deg,rgba(255,255,255,.1),rgba(255,255,255,.025))}
+.welcome:after{content:"CAPT";position:absolute;right:20px;bottom:-40px;font:800 clamp(90px,15vw,190px) Manrope,sans-serif;letter-spacing:-12px;color:rgba(255,255,255,.035);pointer-events:none}
+.welcome h1{font:700 clamp(25px,4vw,38px) Manrope,sans-serif;margin:13px 0 9px;max-width:550px}
+.welcome p{color:#bdbab1;font-size:13px;line-height:1.8;max-width:510px}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-bottom:18px}
+.stat{border-radius:21px;padding:19px;min-width:0;position:relative;overflow:hidden}
+.stat-top{display:flex;justify-content:space-between;align-items:center}
+.stat-icon{width:34px;height:34px;border-radius:12px;display:grid;place-items:center;background:rgba(217,185,120,.12);color:var(--gold-light)}
+.stat h3{font:700 29px Manrope,sans-serif;margin:16px 0 4px}.stat p{color:var(--muted);font-size:11px}
+.section-heading{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin:25px 0 14px}
+.section-heading h2{font:700 17px Manrope,sans-serif}.section-heading p{color:var(--muted);font-size:11px;margin-top:5px}
+.panel{border-radius:23px;padding:21px;margin-bottom:17px}
+.quick-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.quick-action{text-align:left;padding:19px;border-radius:17px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.1);color:white;transition:.25s}
+.quick-action:hover{background:rgba(255,255,255,.1);transform:translateY(-3px)}
+.quick-action span{display:block;color:var(--gold-light);font-size:20px;margin-bottom:12px}
+.quick-action strong{font-size:12px}.quick-action p{font-size:10px;color:var(--muted);margin-top:6px}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:15px}
+.toolbar .search-input{flex:1;min-width:160px}
+.car-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.car-card{overflow:hidden;border-radius:20px;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.12);transition:.25s}
+.car-card:hover{transform:translateY(-3px);border-color:rgba(217,185,120,.35)}
+.car-photo{width:100%;height:175px;object-fit:cover;background:#292825;display:block}
+.car-info{padding:16px}.car-info h3{font:700 14px Manrope,sans-serif;margin-bottom:7px}
+.car-meta{color:var(--muted);font-size:10px;line-height:1.7}
+.car-price{color:var(--gold-light);font:700 17px Manrope,sans-serif;margin:12px 0}
+.car-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+.chip{display:inline-flex;padding:6px 9px;border-radius:20px;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;background:rgba(255,255,255,.09);color:#d7d3ca;border:1px solid rgba(255,255,255,.1)}
+.chip.available,.chip.approved,.chip.published{color:#a5e4ba;background:rgba(100,200,130,.1)}
+.chip.pending,.chip.draft{color:#e8cc91;background:rgba(217,185,120,.1)}
+.chip.sold,.chip.rejected{color:#f0a1a1;background:rgba(220,100,100,.1)}
+.request-card{padding:18px;border-radius:18px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.045);margin-bottom:12px}
+.request-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.request-head h3{font:700 14px Manrope,sans-serif}
+.request-card p{color:#c0bdb5;font-size:11px;line-height:1.8}
+.request-photos{display:flex;gap:8px;overflow-x:auto;margin:12px 0}
+.request-photos img{width:90px;height:70px;object-fit:cover;border-radius:10px}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 15px}
+.full{grid-column:1/-1}
+.check-row{display:flex;align-items:center;gap:9px;margin-top:17px;font-size:12px;color:#d8d4ca}
+.check-row input{accent-color:#d9b978;width:17px;height:17px}
+.post-card{padding:17px;border-radius:17px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);margin-bottom:11px}
+.post-card h3{font:700 14px Manrope,sans-serif;margin:9px 0}
+.post-card p{font-size:11px;color:var(--muted);line-height:1.7}
+.empty{text-align:center;padding:45px 15px;color:var(--muted);border:1px dashed rgba(255,255,255,.15);border-radius:18px;font-size:12px}
+.empty strong{display:block;color:#eee;margin-bottom:7px;font-size:14px}
+#toast{position:fixed;z-index:100;bottom:25px;left:50%;transform:translate(-50%,20px);opacity:0;pointer-events:none;padding:13px 19px;border-radius:15px;background:rgba(35,34,31,.92);border:1px solid rgba(255,255,255,.2);backdrop-filter:blur(25px);color:white;font-size:12px;transition:.3s;max-width:90%;text-align:center}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+@media(max-width:1050px){.stats{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:760px){
+#app{padding:10px 10px 92px}.app-layout{display:block}.sidebar{display:none}
+.mobile-brand{display:flex;align-items:center;gap:10px;padding:9px 5px 15px}
+.mobile-brand img{width:115px;height:auto;object-fit:contain}
+.mobile-brand small{display:block;color:var(--muted);font-size:9px;letter-spacing:1.5px;margin-top:3px}
+.topbar{padding:13px 15px;min-height:65px}.topbar h2{font-size:14px}
+.status-indicator{font-size:0;padding:10px}.status-dot{width:8px;height:8px}
+.welcome{padding:23px;min-height:205px}.welcome h1{font-size:26px}
+.stats{gap:9px}.stat{padding:14px}.stat h3{font-size:25px}.stat p{font-size:10px}
+.quick-grid{grid-template-columns:1fr}.quick-action{padding:14px}
+.car-grid{grid-template-columns:1fr}.car-photo{height:200px}.panel{padding:16px}
+.form-grid{grid-template-columns:1fr}.full{grid-column:auto}
+.mobile-nav{position:fixed;z-index:50;display:flex;left:10px;right:10px;bottom:10px;justify-content:space-around;padding:9px 5px;border-radius:22px;background:rgba(29,28,26,.78);border:1px solid rgba(255,255,255,.19);backdrop-filter:blur(35px) saturate(180%);-webkit-backdrop-filter:blur(35px) saturate(180%);box-shadow:0 12px 40px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.15)}
+.mobile-nav button{display:flex;flex-direction:column;align-items:center;gap:4px;background:transparent;border:0;color:#aaa;font-size:9px;padding:6px 9px;border-radius:12px}
+.mobile-nav button span{font-size:18px}.mobile-nav button.active{color:var(--gold-light);background:rgba(217,185,120,.1)}
+}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+</style>
+</head>
+
+<body>
+<section id="loginScreen">
+<div class="login-card glass-heavy">
+<img src="capt-autos-logo.PNG" alt="CAPT AUTOS" class="brand-logo" onerror="this.style.display='none'">
+<div class="eyebrow">CAPT AUTOS · BUY · SELL · SWAP</div>
+<h1>Command Centre</h1>
+<p class="subtle">Sign in to manage your automotive business.</p>
+<form id="loginForm">
+<div class="field"><label>Email address</label><input id="email" type="email" placeholder="Admin email" required autocomplete="username"></div>
+<div class="field"><label>Password</label><input id="password" type="password" placeholder="Your password" required autocomplete="current-password"></div>
+<button class="btn btn-gold btn-block" id="loginButton" type="submit">Enter Command Centre ↗</button>
+</form>
+<div id="loginMessage"></div>
+<p class="subtle" style="margin-top:24px;font-size:10px">CAPT AUTOS · ABUJA, NIGERIA</p>
+</div>
+</section>
+
+<section id="app">
+<div class="app-layout">
+<aside class="sidebar glass-heavy">
+<div class="sidebar-brand"><img src="capt-autos-logo.PNG" alt="CAPT AUTOS"><small>BUY · SELL · SWAP</small></div>
+<div class="nav-label">WORKSPACE</div>
+<button class="nav-btn active" data-page="overview"><span class="nav-icon">HOME</span>Overview</button>
+<button class="nav-btn" data-page="inventory"><span class="nav-icon">CARS</span>Vehicle inventory</button>
+<button class="nav-btn" data-page="requests"><span class="nav-icon">↗</span>Customer requests</button>
+<div class="nav-label">WEBSITE</div>
+<button class="nav-btn" data-page="posts"><span class="nav-icon">POSTS</span>Website posts</button>
+<div class="sidebar-bottom">
+<button class="nav-btn" id="signOutDesktop"><span class="nav-icon">OUT</span>Sign out</button>
+<div class="admin-profile"><div class="avatar">CA</div><div><strong>Administrator</strong><small>CAPT AUTOS</small></div></div>
+</div>
+</aside>
+
+<main class="main">
+<div class="mobile-brand"><img src="capt-autos-logo.PNG" alt="CAPT AUTOS"><div><small>CAPT AUTOS</small><small>BUY · SELL · SWAP</small></div></div>
+<header class="topbar glass">
+<div><h2 id="pageTitle">Overview</h2><p>CAPT AUTOS · Abuja, Nigeria</p></div>
+<div class="top-actions"><div class="status-indicator"><span class="status-dot"></span>SYSTEM ONLINE</div><button class="btn btn-small" id="signOutMobile">OUT</button></div>
+</header>
+
+<section class="page active" id="page-overview">
+<div class="welcome glass">
+<div class="eyebrow">CAPT AUTOS / CONTROL ROOM</div>
+<h1>Your business.<br>Under your control.</h1>
+<p>Manage your vehicles, customer enquiries and digital showroom from one place.</p>
+</div>
+<div class="stats">
+<div class="stat glass"><div class="stat-top"><span class="eyebrow">INVENTORY</span><span class="stat-icon">CARS</span></div><h3 id="totalCars">—</h3><p>Total vehicles</p></div>
+<div class="stat glass"><div class="stat-top"><span class="eyebrow">AVAILABLE</span><span class="stat-icon" aria-hidden="true">AVAILABLE</span></div><h3 id="availableCars">—</h3><p>Available vehicles</p></div>
+<div class="stat glass"><div class="stat-top"><span class="eyebrow">REQUESTS</span><span class="stat-icon">↗</span></div><h3 id="pendingRequests">—</h3><p>Pending requests</p></div>
+<div class="stat glass"><div class="stat-top"><span class="eyebrow">SHOWROOM</span><span class="stat-icon" aria-hidden="true">POSTS</span></div><h3 id="publishedPosts">—</h3><p>Published posts</p></div>
+</div>
+<div class="section-heading"><div><h2>Quick operations</h2><p>Jump straight into your daily tasks.</p></div></div>
+<div class="quick-grid">
+<button class="quick-action" onclick="showPage('inventory')"><span>＋</span><strong>Add a vehicle</strong><p>Expand your showroom inventory</p></button>
+<button class="quick-action" onclick="showPage('requests')"><span>↗</span><strong>Review requests</strong><p>Manage customer submissions</p></button>
+<button class="quick-action" onclick="showPage('posts')"><span>POSTS</span><strong>Create an announcement</strong><p>Publish updates and promotions</p></button>
+</div>
+<div class="section-heading"><div><h2>Recent vehicles</h2><p>Your latest inventory additions.</p></div><button class="btn btn-small" onclick="showPage('inventory')">View inventory ↗</button></div>
+<div id="recentCars" class="car-grid"></div>
+</section>
+
+<section class="page" id="page-inventory">
+<div class="section-heading"><div><h2>Vehicle inventory</h2><p>Add, update and manage your showroom.</p></div><button class="btn btn-gold" onclick="newCarForm()">＋ Add vehicle</button></div>
+<div class="panel glass" id="carFormPanel" style="display:none">
+<div class="section-heading" style="margin-top:0"><div><h2 id="carFormTitle">Add a vehicle</h2><p>Vehicle information and photographs.</p></div><button class="btn btn-small" onclick="closeCarForm()">Close</button></div>
+<form id="carForm">
+<input type="hidden" id="carId">
+<div class="form-grid">
+<div class="field"><label>Vehicle title *</label><input id="carTitle" required placeholder="e.g. Toyota Camry XLE"></div>
+<div class="field"><label>Brand *</label><input id="carBrand" required placeholder="Toyota"></div>
+<div class="field"><label>Model *</label><input id="carModel" required placeholder="Camry"></div>
+<div class="field"><label>Year</label><input id="carYear" type="number" min="1900" max="2100"></div>
+<div class="field"><label>Price (₦)</label><input id="carPrice" type="number" min="0"></div>
+<div class="field"><label>Mileage (km)</label><input id="carMileage" type="number" min="0"></div>
+<div class="field"><label>Transmission</label><select id="carTransmission"><option value="">Select</option><option>Automatic</option><option>Manual</option><option>CVT</option></select></div>
+<div class="field"><label>Fuel type</label><select id="carFuel"><option value="">Select</option><option>Petrol</option><option>Diesel</option><option>Hybrid</option><option>Electric</option></select></div>
+<div class="field"><label>Condition</label><select id="carCondition"><option value="">Select</option><option>Foreign Used</option><option>Nigerian Used</option><option>Brand New</option></select></div>
+<div class="field"><label>Status</label><select id="carStatus"><option value="available">Available</option><option value="pending">Pending</option><option value="sold">Sold</option></select></div>
+<div class="field full"><label>Location</label><input id="carLocation" value="Abuja, Nigeria"></div>
+<div class="field full"><label>Description</label><textarea id="carDescription" placeholder="Describe the vehicle..."></textarea></div>
+<div class="field full"><label>Vehicle photographs (up to 5)</label><input id="carPhotos" type="file" accept="image/jpeg,image/png,image/webp" multiple></div>
+</div>
+<label class="check-row"><input type="checkbox" id="carFeatured">Feature this vehicle on the homepage</label>
+<label class="check-row"><input type="checkbox" id="carDistress">Mark as a distress sale</label>
+<p class="subtle" id="existingPhotos" style="margin-top:10px"></p>
+<button class="btn btn-gold" type="submit" id="saveCarButton" style="margin-top:20px">Save vehicle ↗</button>
+<div class="message" id="carMessage"></div>
+</form>
+</div>
+<div class="toolbar"><input class="search-input" id="carSearch" placeholder="Search vehicles by name or brand..."><select class="search-input" id="carFilter" style="max-width:160px"><option value="">All statuses</option><option value="available">Available</option><option value="pending">Pending</option><option value="sold">Sold</option></select></div>
+<div id="carList" class="car-grid"></div>
+</section>
+
+<section class="page" id="page-requests">
+<div class="section-heading"><div><h2>Customer requests</h2><p>Review sell, swap and valuation submissions.</p></div><button class="btn" onclick="loadRequests()">↻ Refresh</button></div>
+<div class="toolbar"><select class="search-input" id="requestFilter" style="max-width:190px"><option value="">All requests</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select></div>
+<div id="requestList"></div>
+</section>
+
+<section class="page" id="page-posts">
+<div class="section-heading"><div><h2>Website posts</h2><p>Manage announcements, promotions and updates.</p></div><button class="btn btn-gold" onclick="newPostForm()">＋ Create post</button></div>
+<div class="panel glass" id="postFormPanel" style="display:none">
+<div class="section-heading" style="margin-top:0"><h2 id="postFormTitle">Create a post</h2><button class="btn btn-small" onclick="closePostForm()">Close</button></div>
+<form id="postForm">
+<input type="hidden" id="postId">
+<div class="field"><label>Post title *</label><input id="postTitle" required></div>
+<div class="field"><label>Post type</label><select id="postType"><option value="announcement">Announcement</option><option value="promotion">Promotion</option><option value="update">Update</option></select></div>
+<div class="field"><label>Content *</label><textarea id="postContent" required></textarea></div>
+<div class="field"><label>Post photos (optional, multiple)</label><textarea id="postImages" rows="4" placeholder="Paste one public image URL per line"></textarea><small style="color:var(--muted);display:block;margin-top:7px">Add one public photo URL per line. The first photo is used as the cover; visitors can open the post to view all photos.</small></div>
+<div class="field"><label>Publication status</label><select id="postStatus"><option value="draft">Save as draft</option><option value="published">Publish now</option></select></div>
+<button class="btn btn-gold" type="submit" style="margin-top:20px">Save post ↗</button>
+<div class="message" id="postMessage"></div>
+</form>
+</div>
+<div id="postList"></div>
+</section>
+</main>
+</div>
+
+<nav class="mobile-nav">
+<button class="active" data-page="overview"><span aria-hidden="true">Home</span>Home</button>
+<button data-page="inventory"><span aria-hidden="true">Cars</span>Cars</button>
+<button data-page="requests"><span aria-hidden="true">Requests</span>Requests</button>
+<button data-page="posts"><span aria-hidden="true">Posts</span>Posts</button>
+</nav>
+</section>
+
+<div id="toast"></div>
+
+<script>
+const SUPABASE_URL="https://lcfsirumqiqphdwtmktp.supabase.co";
+const SUPABASE_KEY="sb_publishable_5kwR-5Ajh3KJmDWchcykGg_NeIz6S1g";
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+let currentUser=null,cars=[],requests=[],posts=[],editingPhotoUrls=[];
+
+const $=id=>document.getElementById(id);
+function toast(message){const el=$("toast");el.textContent=message;el.classList.add("show");clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>el.classList.remove("show"),3200)}
+function escapeHTML(value){return String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function money(value){return value===null||value===undefined||value===""?"Price on request":"₦"+Number(value).toLocaleString("en-NG")}
+function dateText(value){return value?new Date(value).toLocaleDateString("en-NG",{day:"numeric",month:"short",year:"numeric"}):""}
+function photo(urls){return Array.isArray(urls)&&urls.length?urls[0]:""}
+
+function showPage(page){
+ document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+ $("page-"+page).classList.add("active");
+ document.querySelectorAll("[data-page]").forEach(b=>b.classList.toggle("active",b.dataset.page===page));
+ const titles={overview:"Overview",inventory:"Vehicle inventory",requests:"Customer requests",posts:"Website posts"};
+ $("pageTitle").textContent=titles[page]||"Dashboard";
+ if(page==="inventory")loadCars();
+ if(page==="requests")loadRequests();
+ if(page==="posts")loadPosts();
+}
+document.querySelectorAll("[data-page]").forEach(b=>b.addEventListener("click",()=>showPage(b.dataset.page)));
+
+async function signOut(){await db.auth.signOut();currentUser=null;$("app").style.display="none";$("loginScreen").style.display="grid"}
+$("signOutDesktop").addEventListener("click",signOut);
+$("signOutMobile").addEventListener("click",signOut);
+
+$("loginForm").addEventListener("submit",async e=>{
+ e.preventDefault();const button=$("loginButton"),message=$("loginMessage");
+ button.disabled=true;button.textContent="Authenticating...";message.textContent="";
+ try{
+  const {data,error}=await db.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});
+  if(error)throw error;
+  await verifyAdmin(data.user);
+ }catch(error){message.className="error";message.textContent=error.message||"Unable to sign in.";await db.auth.signOut()}
+ finally{button.disabled=false;button.textContent="Enter Command Centre ↗"}
+});
+
+async function verifyAdmin(user){
+ if(!user||user.app_metadata?.role!=="admin"){await db.auth.signOut();throw new Error("Access denied. This account is not an administrator.")}
+ currentUser=user;$("loginScreen").style.display="none";$("app").style.display="block";
+ showPage("overview");await refreshOverview();toast("Welcome to CAPT AUTOS.");
+}
+
+db.auth.onAuthStateChange(async(event,session)=>{
+ if(event==="SIGNED_IN"&&session?.user&& !currentUser && session.user.app_metadata?.role==="admin"){
+  try{await verifyAdmin(session.user)}catch(error){console.error(error)}
+ }
+ if(event==="SIGNED_OUT"){currentUser=null;$("app").style.display="none";$("loginScreen").style.display="grid"}
+});
+
+async function refreshOverview(){
+ try{
+  const [a,b,c]=await Promise.all([
+   db.from("cars").select("*").order("created_at",{ascending:false}),
+   db.from("car_requests").select("*").order("created_at",{ascending:false}),
+   db.from("website_posts").select("*").order("created_at",{ascending:false})
+  ]);
+  if(a.error)throw a.error;if(b.error)throw b.error;if(c.error)throw c.error;
+  cars=a.data||[];requests=b.data||[];posts=c.data||[];
+  $("totalCars").textContent=cars.length;
+  $("availableCars").textContent=cars.filter(x=>x.status==="available").length;
+  $("pendingRequests").textContent=requests.filter(x=>x.status==="pending").length;
+  $("publishedPosts").textContent=posts.filter(x=>x.status==="published").length;
+  renderRecentCars();
+ }catch(error){console.error(error);toast("Dashboard loading error: "+error.message)}
+}
+
+function renderRecentCars(){
+ const recent=cars.slice(0,4);
+ $("recentCars").innerHTML=recent.length?recent.map(car=>`
+ <article class="car-card">${photo(car.image_urls)?`<img class="car-photo" src="${escapeHTML(photo(car.image_urls))}" alt="${escapeHTML(car.title)}">`:"<div class='car-photo'></div>"}
+ <div class="car-info"><h3>${escapeHTML(car.title)}</h3><p class="car-meta">${escapeHTML(car.location||"Abuja, Nigeria")}</p><div class="car-price">${money(car.price)}</div><span class="chip ${escapeHTML(car.status)}">${escapeHTML(car.status)}</span></div></article>`).join(""):'<div class="empty"><strong>No vehicles yet</strong>Add your first vehicle to get started.</div>';
+}
+
+async function loadCars(){
+ const target=$("carList");target.innerHTML='<div class="empty">Loading inventory...</div>';
+ const {data,error}=await db.from("cars").select("*").order("created_at",{ascending:false});
+ if(error){target.innerHTML=`<div class="empty">${escapeHTML(error.message)}</div>`;return}
+ cars=data||[];renderCars();renderRecentCars();updateStatsFromLoadedData();
+}
+function updateStatsFromLoadedData(){$("totalCars").textContent=cars.length;$("availableCars").textContent=cars.filter(c=>c.status==="available").length}
+
+function renderCars(){
+ const search=$("carSearch").value.toLowerCase().trim(),filter=$("carFilter").value;
+ const filtered=cars.filter(c=>(c.title+" "+c.brand+" "+c.model).toLowerCase().includes(search)&&(!filter||c.status===filter));
+ $("carList").innerHTML=filtered.length?filtered.map(car=>`
+ <article class="car-card">${photo(car.image_urls)?`<img class="car-photo" src="${escapeHTML(photo(car.image_urls))}" alt="${escapeHTML(car.title)}">`:"<div class='car-photo'></div>"}
+ <div class="car-info"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><h3>${escapeHTML(car.title)}</h3><span class="chip ${escapeHTML(car.status)}">${escapeHTML(car.status)}</span></div>
+ <p class="car-meta">${escapeHTML(car.brand)} · ${escapeHTML(car.model)} · ${escapeHTML(car.year||"Year unknown")}<br>${escapeHTML(car.transmission||"")} · ${escapeHTML(car.condition||"")}<br>${escapeHTML(car.location||"Abuja, Nigeria")}</p>
+ <div class="car-price">${money(car.price)}</div>${car.is_featured?'<span class="chip">Featured</span>':""}${car.is_distress_sale?'<span class="chip pending">Distress sale</span>':""}
+ <div class="car-actions"><button class="btn btn-small" onclick="editCar('${car.id}')">Edit</button><button class="btn btn-small btn-danger" onclick="deleteCar('${car.id}')">Delete</button></div></div></article>`).join(""):'<div class="empty"><strong>No matching vehicles</strong>Try another search or add a vehicle.</div>';
+}
+$("carSearch").addEventListener("input",renderCars);$("carFilter").addEventListener("change",renderCars);
+
+function newCarForm(){
+ $("carForm").reset();$("carId").value="";$("carLocation").value="Abuja, Nigeria";
+ $("carFormTitle").textContent="Add a vehicle";$("existingPhotos").textContent="";
+ editingPhotoUrls=[];$("carFormPanel").style.display="block";$("carFormPanel").scrollIntoView({behavior:"smooth",block:"start"});
+}
+function closeCarForm(){$("carFormPanel").style.display="none"}
+
+function editCar(id){
+ const c=cars.find(x=>x.id===id);if(!c)return;
+ $("carId").value=c.id;$("carTitle").value=c.title||"";$("carBrand").value=c.brand||"";
+ $("carModel").value=c.model||"";$("carYear").value=c.year||"";$("carPrice").value=c.price||"";
+ $("carMileage").value=c.mileage||"";$("carTransmission").value=c.transmission||"";
+ $("carFuel").value=c.fuel_type||"";$("carCondition").value=c.condition||"";
+ $("carStatus").value=c.status||"available";$("carLocation").value=c.location||"Abuja, Nigeria";
+ $("carDescription").value=c.description||"";$("carFeatured").checked=!!c.is_featured;
+ $("carDistress").checked=!!c.is_distress_sale;
+ editingPhotoUrls=Array.isArray(c.image_urls)?[...c.image_urls]:[];
+ $("existingPhotos").textContent=editingPhotoUrls.length+" existing photo(s) will be retained unless replaced.";
+ $("carPhotos").value="";$("carFormTitle").textContent="Edit vehicle";
+ $("carFormPanel").style.display="block";$("carFormPanel").scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+async function uploadCarPhotos(files){
+ const urls=[...editingPhotoUrls],selected=Array.from(files||[]);
+ if(selected.length+urls.length>5)throw new Error("A vehicle can have a maximum of 5 photos.");
+ for(const file of selected){
+  if(!["image/jpeg","image/png","image/webp"].includes(file.type))throw new Error("Only JPG, PNG and WebP images are allowed.");
+  if(file.size>5*1024*1024)throw new Error("Each photo must be 5 MB or smaller.");
+  const safeName=file.name.replace(/[^a-zA-Z0-9._-]/g,"-");
+  const path=`incoming/${Date.now()}-${Math.random().toString(36).slice(2)}-${safeName}`;
+  const {error}=await db.storage.from("car-photos").upload(path,file,{upsert:false});
+  if(error)throw error;
+  const {data}=db.storage.from("car-photos").getPublicUrl(path);urls.push(data.publicUrl);
+ }
+ return urls;
+}
+
+$("carForm").addEventListener("submit",async e=>{
+ e.preventDefault();const button=$("saveCarButton"),message=$("carMessage");
+ button.disabled=true;button.textContent="Saving vehicle...";message.textContent="";
+ try{
+  const image_urls=await uploadCarPhotos($("carPhotos").files);
+  const payload={
+   title:$("carTitle").value.trim(),brand:$("carBrand").value.trim(),model:$("carModel").value.trim(),
+   year:$("carYear").value?Number($("carYear").value):null,
+   price:$("carPrice").value?Number($("carPrice").value):null,
+   mileage:$("carMileage").value?Number($("carMileage").value):null,
+   transmission:$("carTransmission").value||null,fuel_type:$("carFuel").value||null,
+   condition:$("carCondition").value||null,status:$("carStatus").value,
+   location:$("carLocation").value.trim()||"Abuja, Nigeria",
+   description:$("carDescription").value.trim()||null,image_urls,
+   is_featured:$("carFeatured").checked,is_distress_sale:$("carDistress").checked,
+   updated_at:new Date().toISOString()
+  };
+  const id=$("carId").value;
+  const result=id?await db.from("cars").update(payload).eq("id",id):await db.from("cars").insert(payload);
+  if(result.error)throw result.error;
+  toast("Vehicle saved.");closeCarForm();await loadCars();await refreshOverview();
+ }catch(error){message.className="message error";message.textContent=error.message}
+ finally{button.disabled=false;button.textContent="Save vehicle ↗"}
+});
+
+async function deleteCar(id){
+ if(!confirm("Are you sure you want to delete this vehicle?"))return;
+ const {error}=await db.from("cars").delete().eq("id",id);
+ if(error){toast(error.message);return}
+ toast("Vehicle deleted.");await loadCars();await refreshOverview();
+}
+
+async function loadRequests(){
+ const target=$("requestList");target.innerHTML='<div class="empty">Loading customer requests...</div>';
+ const {data,error}=await db.from("car_requests").select("*").order("created_at",{ascending:false});
+ if(error){target.innerHTML=`<div class="empty">${escapeHTML(error.message)}</div>`;return}
+ requests=data||[];renderRequests();$("pendingRequests").textContent=requests.filter(r=>r.status==="pending").length;
+}
+
+function renderRequests(){
+ const filter=$("requestFilter").value,filtered=requests.filter(r=>!filter||r.status===filter);
+ $("requestList").innerHTML=filtered.length?filtered.map(r=>`
+ <article class="request-card"><div class="request-head"><div><span class="chip ${escapeHTML(r.status)}">${escapeHTML(r.status)}</span><h3 style="margin-top:10px">${escapeHTML(r.customer_name)}</h3><p>${escapeHTML(r.request_type)} request · ${dateText(r.created_at)}</p></div>
+ <a class="btn btn-small" href="https://wa.me/${String(r.customer_phone||"").replace(/\D/g,"")}" target="_blank" rel="noopener">WhatsApp ↗</a></div>
+ <p><strong>Phone:</strong> ${escapeHTML(r.customer_phone)}</p>
+ <p><strong>Vehicle:</strong> ${escapeHTML(r.brand)} ${escapeHTML(r.model)} ${r.year?escapeHTML(r.year):""}</p>
+ <p><strong>Condition:</strong> ${escapeHTML(r.condition||"Not specified")}</p>
+ <p><strong>Expected price:</strong> ${money(r.expected_price)}</p>
+ ${r.wanted_car?`<p><strong>Wanted in exchange:</strong> ${escapeHTML(r.wanted_car)}</p>`:""}
+ <p><strong>Location:</strong> ${escapeHTML(r.location||"Not specified")}</p>
+ ${r.description?`<p><strong>Description:</strong> ${escapeHTML(r.description)}</p>`:""}
+ ${Array.isArray(r.photo_urls)&&r.photo_urls.length?`<div class="request-photos">${r.photo_urls.map(url=>`<a href="${escapeHTML(url)}" target="_blank" rel="noopener"><img src="${escapeHTML(url)}" alt="Customer vehicle photo"></a>`).join("")}</div>`:""}
+ ${r.status==="pending"?`<div class="car-actions"><button class="btn btn-small btn-success" onclick="approveRequest('${r.id}')">Approve & add vehicle</button><button class="btn btn-small btn-danger" onclick="rejectRequest('${r.id}')">Reject</button></div>`:""}
+ </article>`).join(""):'<div class="empty"><strong>No requests found</strong>Customer submissions will appear here.</div>';
+}
+$("requestFilter").addEventListener("change",renderRequests);
+
+async function approveRequest(id){
+ if(!confirm("Approve this request and add the vehicle to your inventory?"))return;
+ const {error}=await db.rpc("approve_car_request",{p_request_id:id});
+ if(error){toast("Approval failed: "+error.message);return}
+ toast("Request approved and vehicle added.");await loadRequests();await refreshOverview();
+}
+async function rejectRequest(id){
+ if(!confirm("Reject this customer request?"))return;
+ const {error}=await db.from("car_requests").update({status:"rejected",updated_at:new Date().toISOString()}).eq("id",id).eq("status","pending");
+ if(error){toast(error.message);return}
+ toast("Request rejected.");await loadRequests();await refreshOverview();
+}
+
+async function loadPosts(){
+ const target=$("postList");target.innerHTML='<div class="empty">Loading website posts...</div>';
+ const {data,error}=await db.from("website_posts").select("*").order("created_at",{ascending:false});
+ if(error){target.innerHTML=`<div class="empty">${escapeHTML(error.message)}</div>`;return}
+ posts=data||[];renderPosts();$("publishedPosts").textContent=posts.filter(p=>p.status==="published").length;
+}
+function renderPosts(){
+ $("postList").innerHTML=posts.length?posts.map(p=>`
+ <article class="post-card"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><span class="chip">${escapeHTML(p.post_type)}</span><span class="chip ${escapeHTML(p.status)}">${escapeHTML(p.status)}</span></div>
+ <h3>${escapeHTML(p.title)}</h3><p>${escapeHTML(p.content)}</p>
+ ${(Array.isArray(p.image_urls)&&p.image_urls.length)||p.image_url?`<p style="margin-top:9px;color:var(--muted)">${(Array.isArray(p.image_urls)&&p.image_urls.length)||1} photo(s) attached</p>`:""}
+ <p style="margin-top:9px">Created ${dateText(p.created_at)}</p>
+ <div class="car-actions"><button class="btn btn-small" onclick="editPost('${p.id}')">Edit</button><button class="btn btn-small" onclick="togglePost('${p.id}','${p.status}')">${p.status==="published"?"Unpublish":"Publish"}</button><button class="btn btn-small btn-danger" onclick="deletePost('${p.id}')">Delete</button></div>
+ </article>`).join(""):'<div class="empty"><strong>No website posts yet</strong>Create an announcement or promotion.</div>';
+}
+function newPostForm(){$("postForm").reset();$("postId").value="";$("postFormTitle").textContent="Create a post";$("postFormPanel").style.display="block";$("postFormPanel").scrollIntoView({behavior:"smooth"})}
+function closePostForm(){$("postFormPanel").style.display="none"}
+function editPost(id){
+ const p=posts.find(x=>x.id===id);if(!p)return;
+ $("postId").value=p.id;$("postTitle").value=p.title||"";$("postType").value=p.post_type||"announcement";
+ $("postContent").value=p.content||"";$("postImages").value=(Array.isArray(p.image_urls)&&p.image_urls.length?p.image_urls:(p.image_url?[p.image_url]:[])).join("\\n");$("postStatus").value=p.status||"draft";
+ $("postFormTitle").textContent="Edit post";$("postFormPanel").style.display="block";$("postFormPanel").scrollIntoView({behavior:"smooth"});
+}
+$("postForm").addEventListener("submit",async e=>{
+ e.preventDefault();const message=$("postMessage");
+ const photoUrls=[...new Set($("postImages").value.split(/\r?\n|,/).map(v=>v.trim()).filter(Boolean))];
+ if(photoUrls.some(url=>!/^https?:\/\//i.test(url))){message.className="message error";message.textContent="Each photo must be a valid public http(s) URL.";return}
+ const payload={title:$("postTitle").value.trim(),post_type:$("postType").value,content:$("postContent").value.trim(),image_url:photoUrls[0]||null,image_urls:photoUrls,status:$("postStatus").value,updated_at:new Date().toISOString()};
+ try{
+  const id=$("postId").value;
+  const result=id?await db.from("website_posts").update(payload).eq("id",id):await db.from("website_posts").insert(payload);
+  if(result.error)throw result.error;
+  toast("Website post saved.");closePostForm();await loadPosts();await refreshOverview();
+ }catch(error){message.className="message error";message.textContent=error.message}
+});
+async function togglePost(id,status){
+ const newStatus=status==="published"?"draft":"published";
+ const {error}=await db.from("website_posts").update({status:newStatus,updated_at:new Date().toISOString()}).eq("id",id);
+ if(error){toast(error.message);return}
+ toast(newStatus==="published"?"Post published.":"Post unpublished.");await loadPosts();await refreshOverview();
+}
+async function deletePost(id){
+ if(!confirm("Delete this website post permanently?"))return;
+ const {error}=await db.from("website_posts").delete().eq("id",id);
+ if(error){toast(error.message);return}
+ toast("Post deleted.");await loadPosts();await refreshOverview();
+}
+
+(async function restoreSession(){
+ const {data,error}=await db.auth.getSession();if(error)return;
+ if(data.session?.user){try{await verifyAdmin(data.session.user)}catch(e){console.error(e)}}
+})();
+</script>
+</body>
+</html>
