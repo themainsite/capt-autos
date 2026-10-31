@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0b1220">
+  <title>CAPT AUTOS | BUY · SELL · SWAP</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #0b1220;
+      color: #fff;
+      font-family: Arial, sans-serif;
+    }
+
+    header {
+      padding: 20px;
+      text-align: center;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+    }
+
+    header img {
+      width: 150px;
+      max-width: 60%;
+      height: auto;
+    }
+
+    header h1 {
+      color: #d6ad60;
+      margin-bottom: 5px;
+    }
+
+    header p {
+      letter-spacing: 3px;
+      font-size: 13px;
+    }
+
+    main {
+      width: min(1100px, 92%);
+      margin: 35px auto;
+    }
+
+    .section-title {
+      color: #d6ad60;
+      margin-bottom: 20px;
+    }
+
+    #postsContainer {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+    }
+
+    .post {
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 14px;
+      padding: 16px;
+      overflow: hidden;
+    }
+
+    .post h3 {
+      color: #d6ad60;
+      margin-top: 0;
+    }
+
+    .post-content {
+      color: #d5d8df;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+
+    .post-gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 9px;
+      margin-top: 15px;
+    }
+
+    .post-gallery img {
+      display: block;
+      width: 100%;
+      height: 125px;
+      object-fit: cover;
+      border-radius: 9px;
+      cursor: pointer;
+      transition: opacity .2s;
+    }
+
+    .post-gallery img:hover {
+      opacity: .8;
+    }
+
+    .photo-count {
+      color: #d6ad60;
+      font-size: 12px;
+      margin-top: 10px;
+    }
+
+    .post-date {
+      color: #9ba3b2;
+      font-size: 12px;
+      margin-top: 15px;
+    }
+
+    .empty-message {
+      color: #aeb5c2;
+      text-align: center;
+      padding: 30px 10px;
+      grid-column: 1 / -1;
+    }
+
+    /* Full-screen photo viewer */
+    .gallery-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: rgba(0,0,0,.96);
+      align-items: center;
+      justify-content: center;
+      padding: 55px 50px;
+    }
+
+    .gallery-modal.active {
+      display: flex;
+    }
+
+    .gallery-modal img {
+      max-width: 100%;
+      max-height: 80vh;
+      object-fit: contain;
+    }
+
+    .gallery-button {
+      position: absolute;
+      background: transparent;
+      color: white;
+      border: none;
+      font-size: 32px;
+      cursor: pointer;
+      padding: 12px;
+    }
+
+    .gallery-close {
+      top: 8px;
+      right: 15px;
+    }
+
+    .gallery-prev {
+      left: 5px;
+    }
+
+    .gallery-next {
+      right: 5px;
+    }
+
+    .gallery-counter {
+      position: absolute;
+      bottom: 15px;
+      color: white;
+      font-size: 14px;
+    }
+
+    footer {
+      border-top: 1px solid rgba(255,255,255,.1);
+      text-align: center;
+      padding: 25px;
+      color: #aeb5c2;
+      font-size: 13px;
+    }
+
+    @media (max-width: 500px) {
+      .gallery-modal {
+        padding: 55px 35px;
+      }
+
+      .post-gallery img {
+        height: 105px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <img src="capt-autos-logo.PNG" alt="CAPT AUTOS Logo">
+    <h1>CAPT AUTOS</h1>
+    <p>BUY · SELL · SWAP</p>
+  </header>
+
+  <main>
+    <section>
+      <h2 class="section-title">Latest Updates</h2>
+      <div id="postsContainer">
+        <p class="empty-message">Loading posts...</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    CAPT AUTOS · Abuja, Nigeria
+  </footer>
+
+  <!-- Photo viewer -->
+  <div
+    class="gallery-modal"
+    id="galleryModal"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Post photo gallery"
+  >
+    <button
+      class="gallery-button gallery-close"
+      id="galleryClose"
+      aria-label="Close gallery"
+    >&times;</button>
+
+    <button
+      class="gallery-button gallery-prev"
+      id="galleryPrev"
+      aria-label="Previous photo"
+    >&#10094;</button>
+
+    <img id="galleryImage" src="" alt="Post photo">
+
+    <button
+      class="gallery-button gallery-next"
+      id="galleryNext"
+      aria-label="Next photo"
+    >&#10095;</button>
+
+    <div class="gallery-counter" id="galleryCounter"></div>
+  </div>
+
+  <!-- Supabase library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script>
+    // ==========================================
+    // SUPABASE CONNECTION
+    // ==========================================
+
+    const SUPABASE_URL = "YOUR_SUPABASE_PROJECT_URL";
+    const SUPABASE_ANON_KEY = "YOUR_SUPABASE_PUBLISHABLE_KEY";
+
+    const supabase = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_ANON_KEY
+    );
+
+    // ==========================================
+    // PHOTO GALLERY
+    // ==========================================
+
+    let currentGalleryPhotos = [];
+    let currentGalleryIndex = 0;
+
+    const galleryModal = document.getElementById("galleryModal");
+    const galleryImage = document.getElementById("galleryImage");
+    const galleryCounter = document.getElementById("galleryCounter");
+
+    function openPostGallery(photos, startIndex = 0) {
+      currentGalleryPhotos = photos.filter(Boolean);
+
+      if (!currentGalleryPhotos.length) return;
+
+      currentGalleryIndex = startIndex;
+      showGalleryPhoto();
+
+      galleryModal.classList.add("active");
+      document.body.style.overflow = "hidden";
+    }
+
+    function showGalleryPhoto() {
+      galleryImage.src = currentGalleryPhotos[currentGalleryIndex];
+
+      galleryCounter.textContent =
+        `${currentGalleryIndex + 1} / ${currentGalleryPhotos.length}`;
+    }
+
+    function closeGallery() {
+      galleryModal.classList.remove("active");
+      galleryImage.src = "";
+      document.body.style.overflow = "";
+    }
+
+    document.getElementById("galleryClose").addEventListener(
+      "click",
+      closeGallery
+    );
+
+    document.getElementById("galleryPrev").addEventListener("click", () => {
+      if (!currentGalleryPhotos.length) return;
+
+      currentGalleryIndex =
+        (currentGalleryIndex - 1 + currentGalleryPhotos.length) %
+        currentGalleryPhotos.length;
+
+      showGalleryPhoto();
+    });
+
+    document.getElementById("galleryNext").addEventListener("click", () => {
+      if (!currentGalleryPhotos.length) return;
+
+      currentGalleryIndex =
+        (currentGalleryIndex + 1) % currentGalleryPhotos.length;
+
+      showGalleryPhoto();
+    });
+
+    galleryModal.addEventListener("click", (event) => {
+      if (event.target === galleryModal) {
+        closeGallery();
+      }
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (!galleryModal.classList.contains("active")) return;
+
+      if (event.key === "Escape") {
+        closeGallery();
+      }
+
+      if (event.key === "ArrowRight") {
+        document.getElementById("galleryNext").click();
+      }
+
+      if (event.key === "ArrowLeft") {
+        document.getElementById("galleryPrev").click();
+      }
+    });
+
+    // ==========================================
+    // LOAD PUBLISHED POSTS
+    // ==========================================
+
+    async function loadPosts() {
+      const container = document.getElementById("postsContainer");
+
+      const { data: posts, error } = await supabase
+        .from("website_posts")
+        .select(`
+          id,
+          title,
+          content,
+          post_type,
+          image_url,
+          image_urls,
+          created_at
+        `)
+        .eq("status", "published")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error loading posts:", error);
+        container.innerHTML =
+          '<p class="empty-message">Unable to load updates right now.</p>';
+        return;
+      }
+
+      container.innerHTML = "";
+
+      if (!posts || posts.length === 0) {
+        container.innerHTML =
+          '<p class="empty-message">There are no updates yet.</p>';
+        return;
+      }
+
+      posts.forEach((post) => {
+        // Read all photos, or fall back to the old single-photo field.
+        const photos = Array.isArray(post.image_urls) && post.image_urls.length
+          ? post.image_urls.filter(Boolean)
+          : post.image_url
+            ? [post.image_url]
+            : [];
+
+        const article = document.createElement("article");
+        article.className = "post";
+
+        const title = document.createElement("h3");
+        title.textContent = post.title || "";
+
+        const content = document.createElement("div");
+        content.className = "post-content";
+        content.textContent = post.content || "";
+
+        article.appendChild(title);
+        article.appendChild(content);
+
+        if (photos.length > 0) {
+          const gallery = document.createElement("div");
+          gallery.className = "post-gallery";
+
+          photos.forEach((photo, index) => {
+            const image = document.createElement("img");
+
+            image.src = photo;
+            image.alt = `Photo ${index + 1} of ${post.title || "post"}`;
+            image.loading = "lazy";
+
+            image.addEventListener("click", () => {
+              openPostGallery(photos, index);
+            });
+
+            gallery.appendChild(image);
+          });
+
+          article.appendChild(gallery);
+
+          if (photos.length > 1) {
+            const count = document.createElement("div");
+            count.className = "photo-count";
+            count.textContent = `${photos.length} photos`;
+            article.appendChild(count);
+          }
+        }
+
+        const date = document.createElement("div");
+        date.className = "post-date";
+
+        if (post.created_at) {
+          date.textContent = new Date(post.created_at).toLocaleDateString();
+        }
+
+        article.appendChild(date);
+        container.appendChild(article);
+      });
+    }
+
+    // Load posts when the page is ready.
+    loadPosts();
+  </script>
+
+</body>
+</html>
